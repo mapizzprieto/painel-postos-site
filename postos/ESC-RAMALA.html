@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escritório de Representação em Ramala</title>
+<link rel="stylesheet" href="../comum/barlow.css">
+<style>
+  :root {
+    --fundo: #f6f5f2; --cartao: #ffffff; --texto: #1d1f22; --suave: #6b6f76;
+    --linha: #e6e4df; --destaque: #23533f; --alerta: #b4532a; --medio: #b08a1e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --fundo: #141517; --cartao: #1e2023; --texto: #ecebe8; --suave: #9a9ea5;
+            --linha: #2e3034; --destaque: #7cc4a2; --alerta: #e58b62; --medio: #d9b44a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto);
+         font: 16px/1.4 Barlow, system-ui, sans-serif; }
+  main { max-width: 560px; margin: 0 auto; padding: 20px 14px 40px; }
+  .local { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); font-weight: 600; }
+  h1 { font-size: 28px; line-height: 1.1; margin: 4px 0 6px; font-weight: 700; }
+  .endereco { color: var(--suave); font-size: 15px; margin: 0 0 14px; }
+  .legenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--suave); margin-bottom: 18px; }
+  .bloco { margin: 14px 0 4px; }
+  .bloco > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+           font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--texto, #222); font-weight: 700;
+           padding: 8px 2px 6px; border-bottom: 1px solid var(--linha); margin-bottom: 10px; }
+  .bloco > summary::-webkit-details-marker { display: none; }
+  .bloco > summary::before { content: ''; border-style: solid; border-width: 5px 0 5px 7px;
+           border-color: transparent transparent transparent currentColor; transition: transform .15s; }
+  .bloco[open] > summary::before { transform: rotate(90deg); }
+  .tema { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+  .tema > summary { display: flex; align-items: center; gap: 8px; padding: 12px 14px;
+                   font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); font-weight: 600; }
+  .tema > summary::before { content: ''; width: 0; height: 0; border-style: solid;
+                           border-width: 5px 0 5px 7px; border-color: transparent transparent transparent currentColor;
+                           transition: transform .15s; flex: none; }
+  .tema[open] > summary::before { transform: rotate(90deg); }
+  .tema[open] > summary { padding-bottom: 8px; }
+  .voltar { display: inline-block; margin-bottom: 10px; color: var(--destaque); text-decoration: none; font-size: 14px; }
+  .tema details { border-top: 1px solid var(--linha); }
+  .tema details summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
+            padding: 11px 14px; align-items: start; }
+  summary { list-style: none; cursor: pointer; }
+  summary::-webkit-details-marker { display: none; }
+  .rotulo { color: var(--suave); font-size: 14px; grid-column: 1 / -1; display: flex; justify-content: space-between; }
+  .valor { font-weight: 600; font-size: 16px; grid-column: 1 / -1; }
+  .valor .par { display: block; margin-top: 0.7em; }
+  .resumo .valor { font-weight: 400; font-size: 15px; line-height: 1.45; color: var(--texto); }
+  .conf { display: inline-flex; gap: 3px; align-items: center; }
+  .conf i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid currentColor; display: inline-block; }
+  .conf i.on { background: currentColor; }
+  .c-alta { color: var(--destaque); } .c-media { color: var(--medio); }
+  .c-baixa, .c-sem { color: var(--alerta); }
+  .detalhe { padding: 0 14px 14px; font-size: 14px; color: var(--suave); }
+  .detalhe p { margin: 0 0 8px; }
+  .detalhe .nota { color: var(--texto); }
+  .detalhe a { color: var(--destaque); word-break: break-word; }
+  .detalhe ul { margin: 0 0 8px; padding-left: 18px; }
+  details[open] summary .valor { color: var(--destaque); }
+  .conflito { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--alerta); }
+  .relogios { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--linha); }
+  .relogio { padding: 10px 8px 12px; min-width: 0; display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "onde onde onde" "an hora cal";
+             align-items: center; column-gap: 5px; row-gap: 6px; }
+  .relogio + .relogio { border-left: 1px solid var(--linha); }
+  .relogio .onde { grid-area: onde; color: var(--suave); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .relogio .gmt { font-size: 11px; font-variant-numeric: tabular-nums; margin-left: 3px; }
+  .relogio .hora { grid-area: hora; font-size: 23px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+  .analogico { grid-area: an; flex: none; }
+  .analogico .face { fill: var(--cartao); stroke: var(--texto); stroke-width: 3; }
+  .analogico .marca, .analogico .ponteiro { stroke: var(--texto); stroke-linecap: round; }
+  .analogico .eixo { fill: var(--destaque); }
+  .analogico.noite .face { fill: var(--texto); }
+  .analogico.noite .marca, .analogico.noite .ponteiro { stroke: var(--cartao); }
+  /* folhinha de arrancar */
+  .folhinha { grid-area: cal; display: flex; flex-direction: column; position: relative; width: 40px; height: 52px; text-align: center; line-height: 1;
+              filter: drop-shadow(0 1px 1px rgba(0,0,0,.18)); padding-top: 3px; }
+  .folhinha .aros { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 0 8px; z-index: 1; }
+  .folhinha .aros i { width: 3px; height: 6px; border-radius: 2px; background: var(--suave); }
+  .folhinha .topo { background: var(--alerta); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: .06em;
+                    text-transform: uppercase; padding: 4px 0 2px; border-radius: 3px 3px 0 0; }
+  .folhinha .folha { flex: 1; display: flex; flex-direction: column; justify-content: center; background: var(--cartao); border: 1px solid var(--linha); border-top: 0; padding: 1px 0 5px;
+                     clip-path: polygon(0 0, 100% 0, 100% 100%, 87.5% calc(100% - 4px), 75% 100%, 62.5% calc(100% - 4px), 50% 100%,
+                       37.5% calc(100% - 4px), 25% 100%, 12.5% calc(100% - 4px), 0 100%); }
+  .folhinha .num { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .folhinha .mes { font-size: 9px; color: var(--suave); text-transform: lowercase; margin-top: 1px; }
+  .grafico { padding: 12px 14px 6px; border-top: 1px solid var(--linha); color: var(--destaque); }
+  .grafico-titulo { color: var(--suave); font-size: 14px; margin-bottom: 4px; }
+  .grafico-nota { color: var(--suave); font-size: 12px; margin-top: 4px; line-height: 1.35; }
+  .referencia { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--linha);
+                color: var(--suave); font-size: 14px; }
+  .referencia .opcoes { display: inline-flex; border: 1px solid var(--destaque); border-radius: 8px; overflow: hidden; }
+  .referencia button { font: inherit; font-weight: 600; padding: 5px 16px; border: 0; background: transparent;
+                       color: var(--destaque); cursor: pointer; }
+  .referencia button[aria-pressed="true"] { background: var(--destaque); color: var(--cartao); }
+  .tema[data-ref="usd"] .ref-brl, .tema[data-ref="brl"] .ref-usd { display: none; }
+  .grafico svg text { fill: var(--suave); }
+  .item-vazio { display: block; padding: 12px 14px; border-top: 1px solid var(--linha); }
+  .item-vazio .rotulo { display: block; color: var(--suave); font-size: 14px; }
+  .item-vazio .valor { display: block; color: var(--suave); font-style: italic; margin-top: 2px; }
+  .vazio-com-fonte summary .valor.vazio-valor { color: var(--suave); font-style: italic; font-weight: 400; }
+  .mapa { border-top: 1px solid var(--linha); padding: 10px 14px 12px; }
+  .mapa-tela { position: relative; border: 1px solid var(--linha); border-radius: 10px; overflow: hidden; background: #dfe9ef; touch-action: none; }
+  .mapa-tela > svg { display: block; width: 100%; height: 340px; cursor: crosshair; }
+  .mapa .terra { fill: #f4f1ea; stroke: #c9c3b6; stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .mapa .linha { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+  .mapa .estrela { pointer-events: none; }
+  .mapa .marca { fill: #fff; stroke: var(--destaque); pointer-events: none; }
+  .mapa .leaflet { height: 380px; }
+  .rotulo-mapa { font: 600 11px/1 Barlow, system-ui, sans-serif; color: #50545b; white-space: nowrap; transform: translate(-50%, -50%);
+                 text-shadow: 0 0 2px #f3f0ea, 0 0 3px #f3f0ea, 0 0 4px #f3f0ea; pointer-events: none; }
+  .rotulo-mapa.cidade { font-size: 13px; color: #33363c; }
+  .rotulo-estacao { font: 600 11px/1 Barlow, system-ui, sans-serif; color: #1d1f22; white-space: nowrap; pointer-events: none;
+                    transform: translate(8px, -50%); text-shadow: 0 0 2px #fff, 0 0 3px #fff, 0 0 4px #fff; }
+  @media (prefers-color-scheme: dark) { .rotulo-estacao { color: #ecebe8; text-shadow: 0 0 2px #000, 0 0 3px #000, 0 0 4px #000; } }
+  @media (prefers-color-scheme: dark) { .rotulo-mapa, .rotulo-mapa.cidade { color: #c9cbd0; text-shadow: 0 0 2px #212327, 0 0 3px #212327, 0 0 4px #212327; } }
+  .mapa .estrela-ll { font-size: 26px; line-height: 26px; text-align: center; color: #1d1f22; text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
+  .mapa-zoom { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .mapa-zoom button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); font: 600 18px Barlow, sans-serif; }
+  .mapa-dica { font-size: 12px; color: var(--suave); margin-top: 6px; }
+  .mapa-horario { display: flex; gap: 6px; margin-top: 10px; }
+  .mapa-horario button { flex: 1; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--linha); background: var(--cartao); color: var(--suave); font: 500 14px Barlow, sans-serif; }
+  .mapa-horario button.ativo { background: var(--destaque); border-color: var(--destaque); color: #fff; }
+  .mapa-info { margin-top: 10px; font-size: 15px; }
+  .mapa-info .nome { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .mi-linha { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px dotted var(--linha); }
+  .mi-rot { color: var(--suave); white-space: nowrap; }
+  .mi-val { text-align: right; }
+  .mi-sub { margin-top: 10px; font-weight: 600; }
+  .mi-fonte { font-size: 12px; color: var(--suave); margin-top: 4px; }
+  .mi-aviso { color: var(--suave); }
+  .mi-link { display: inline-block; margin-top: 10px; }
+  .valor a { color: inherit; }
+  .mapa-info a { color: var(--destaque); }
+  footer { font-size: 13px; color: var(--suave); margin-top: 20px; }
+</style>
+<link rel="stylesheet" href="../comum/leaflet.css">
+<script src="../comum/leaflet.js"></script>
+</head>
+<body>
+<main id="app"><a class="voltar" href="../index.html">← Postos</a></main>
+<script id="dados" type="application/json">{"posto": "Escritório de Representação em Ramala", "endereco": "Abraj House, Tokyo Street, 5° andar, bairro Ein Munjid, Ramala. Endereço postal: Brazil P. O. Box - 60727 Jerusalem, 9713795", "cidade": "Ramala", "fuso_iana": "Asia/Hebron", "fuso_base_min": 300, "pais": "Palestina", "coleta_mais_recente": "2026-11-27", "temas": [{"tema": "fuso", "rotulo": "Fuso horário", "icone": "🕐", "bloco": "Essencial", "itens": [{"link": "", "variavel": "diferenca_brasilia", "rotulo": "Diferença para Brasília", "ordem": 1, "valor": "+5 h", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Base de fusos horários IANA (tz database)", "url": "https://www.iana.org/time-zones", "tipo": "oficial"}]}, {"link": "", "variavel": "horario_verao", "rotulo": "Horário de verão", "ordem": 2, "valor": "27/mar/2027 a 29/out/2027", "unidade": "", "nota": "Ciclo em curso ou o próximo. Ajuste somado à diferença acima. Datas futuras são projeções da regra vigente na base IANA e podem mudar se o país alterar a lei. Calculado pela base de fusos IANA (Asia/Hebron) para os 12 meses a partir de 25/11/2026.", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Base de fusos horários IANA (tz database)", "url": "https://www.iana.org/time-zones", "tipo": "oficial"}]}]}, {"tema": "clima", "rotulo": "Clima", "icone": "🌦️", "bloco": "Essencial", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "Verão quente, com máximas perto de 29 °C em agosto, e inverno fresco, com mínimas perto de 7 °C em janeiro. A chuva se concentra de novembro a março. De maio a setembro, quase não chove. Em dezembro, o dia tem 10h04 de luz e o sol se põe por volta das 16h40. Em junho, são 14h14, com pôr do sol por volta das 19h50. O sol aparece em média 5,7 h por dia em janeiro e 12,0 h em julho.", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Normais climatológicas (Ramallah), tabela da Wikipédia em inglês", "url": "https://en.wikipedia.org/wiki/Ramallah", "tipo": "secundária"}, {"titulo": "Cálculo da posição do Sol (algoritmo da NOAA) a partir das coordenadas do posto", "url": "https://gml.noaa.gov/grad/solcalc/calcdetails.html", "tipo": "oficial"}]}, {"link": "", "variavel": "verao", "rotulo": "Verão (mês mais quente)", "ordem": 1, "valor": "mín 19,8 °C · máx 28,7 °C (agosto)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Normais climatológicas (Ramallah), tabela da Wikipédia em inglês", "url": "https://en.wikipedia.org/wiki/Ramallah", "tipo": "secundária"}]}, {"link": "", "variavel": "inverno", "rotulo": "Inverno (mês mais frio)", "ordem": 2, "valor": "mín 6,9 °C · máx 11,8 °C (janeiro)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Normais climatológicas (Ramallah), tabela da Wikipédia em inglês", "url": "https://en.wikipedia.org/wiki/Ramallah", "tipo": "secundária"}]}, {"link": "", "variavel": "chuva", "rotulo": "Chuva", "ordem": 3, "valor": "718 mm por ano · 46 dias de chuva", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Normais climatológicas (Ramallah), tabela da Wikipédia em inglês", "url": "https://en.wikipedia.org/wiki/Ramallah", "tipo": "secundária"}]}]}, {"tema": "cambio", "rotulo": "Câmbio", "icone": "💱", "bloco": "Essencial", "itens": [{"link": "", "variavel": "moeda", "rotulo": "Moeda", "ordem": 1, "valor": "Novo shekel israelense (ILS)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-24", "nivel": "pais", "fontes": [{"titulo": "Unicode CLDR (Common Locale Data Repository), nomes de moedas em português", "url": "https://cldr.unicode.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "cotacao", "rotulo": "Cotação", "ordem": 2, "valor": "ILS 1 = USD 0,298", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-24", "nivel": "pais", "fontes": [{"titulo": "Banco Central do Brasil - taxas de câmbio de fechamento, todas as moedas (arquivo diário)", "url": "https://www4.bcb.gov.br/Download/fechamento/", "tipo": "oficial"}]}, {"link": "", "variavel": "cotacao_brl", "rotulo": "Cotação", "ordem": 2, "valor": "ILS 1 = BRL 1,75", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-24", "nivel": "pais", "fontes": [{"titulo": "Banco Central do Brasil - taxas de câmbio de fechamento, todas as moedas (arquivo diário)", "url": "https://www4.bcb.gov.br/Download/fechamento/", "tipo": "oficial"}]}]}, {"tema": "custo_vida", "rotulo": "Custo de vida", "icone": "🛒", "bloco": "Essencial", "itens": [{"link": "", "variavel": "indice", "rotulo": "Nível geral de preços", "ordem": 1, "valor": "2,0 vezes o nível do Brasil (2025)", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial - nível de preços do consumo das famílias (WDI, PA.NUS.PRVT.PLI)", "url": "https://data.worldbank.org/indicator/PA.NUS.PRVT.PLI", "tipo": "oficial"}]}, {"link": "", "variavel": "supermercado", "rotulo": "Supermercado", "ordem": 2, "valor": "1,5 vez o nível do Brasil (2021)", "unidade": "", "nota": "", "confianca": "alta", "data": "2021", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial - Programa de Comparação Internacional (ICP 2021), nível de preços por categoria", "url": "https://www.worldbank.org/en/programs/icp", "tipo": "oficial"}]}, {"link": "", "variavel": "restaurante", "rotulo": "Restaurantes e hotéis", "ordem": 3, "valor": "2,4 vezes o nível do Brasil (2021)", "unidade": "", "nota": "", "confianca": "alta", "data": "2021", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial - Programa de Comparação Internacional (ICP 2021), nível de preços por categoria", "url": "https://www.worldbank.org/en/programs/icp", "tipo": "oficial"}]}, {"variavel": "big_mac", "rotulo": "Big Mac", "ordem": 4, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "The Economist - índice Big Mac (dados CC BY 4.0)", "url": "https://github.com/TheEconomist/big-mac-data", "tipo": "imprensa"}], "vazio": true}, {"link": "https://www.numbeo.com/cost-of-living/in/Ramallah?displayCurrency=USD", "variavel": "numbeo", "rotulo": "Numbeo", "ordem": 9, "valor": "Ver preços informados por usuários →", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "cidade", "fontes": [{"titulo": "Numbeo - preços informados por usuários", "url": "https://www.numbeo.com/cost-of-living/", "tipo": "colaborativa"}]}]}, {"tema": "presenca", "rotulo": "Presença brasileira", "icone": "🇧🇷", "bloco": "Essencial", "itens": [{"link": "", "variavel": "comunidade", "rotulo": "Comunidade brasileira estimada", "ordem": 1, "valor": "6.500 na jurisdição do posto (ano-base 2023)", "unidade": "", "nota": "", "confianca": "media", "data": "2023", "nivel": "posto", "fontes": [{"titulo": "MRE - Comunidades brasileiras no exterior (estimativas das repartições, ano a ano)", "url": "https://www.gov.br/mre/pt-br/assuntos/portal-consular/arquivos/brasileiros-no-exterior-estimativas-ano-a-ano", "tipo": "oficial"}]}, {"link": "", "variavel": "eleitores", "rotulo": "Eleitores aptos", "ordem": 2, "valor": "2.139 (nov/2026)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-04", "nivel": "posto", "fontes": [{"titulo": "Tribunal Superior Eleitoral - Eleitorado por local de votação (atual), seções no exterior", "url": "https://dadosabertos.tse.jus.br/dataset/eleitorado-atual", "tipo": "oficial"}]}]}, {"tema": "moradia", "rotulo": "Moradia", "icone": "🏠", "bloco": "Essencial", "itens": []}, {"tema": "transporte", "rotulo": "Transporte", "icone": "🚇", "bloco": "Essencial", "itens": [{"variavel": "tarifa", "rotulo": "Passagem (adulto)", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "seguranca", "rotulo": "Segurança", "icone": "🛡️", "bloco": "Essencial", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "O país não está em guerra nem em conflito armado envolvendo um Estado. A até 25 km do posto, houve 24 episódios do conflito armado (16 mortos), em 10 dos 12 meses. No país, a taxa de homicídios é de 0,6 por 100 mil habitantes em 2022 (Brasil: 19,3). As mortes no trânsito no país somam 5,3 por 100 mil habitantes em 2016 (Brasil: 16,0). Em estabilidade política e ausência de violência, o país ocupa a 199.ª posição entre 208 no índice do Banco Mundial (Brasil: 144.ª).", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-26", "nivel": "cidade", "fontes": [{"titulo": "UCDP - Uppsala Conflict Data Program (Universidade de Uppsala), eventos georreferenciados de violência armada com mortos (GED e candidate)", "url": "https://ucdp.uu.se/downloads/", "tipo": "especializada"}, {"titulo": "Banco Mundial (WDI) - homicídios intencionais por 100 mil habitantes (dado do UNODC), por país", "url": "https://data.worldbank.org/indicator/VC.IHR.PSRC.P5", "tipo": "oficial"}, {"titulo": "Banco Mundial (WDI) - mortes no trânsito por 100 mil habitantes", "url": "https://data.worldbank.org/indicator/SH.STA.TRAF.P5", "tipo": "oficial"}, {"titulo": "Banco Mundial - Worldwide Governance Indicators: estabilidade política e ausência de violência", "url": "https://www.worldbank.org/en/publication/worldwide-governance-indicators", "tipo": "oficial"}]}, {"link": "", "variavel": "conflito_pais", "rotulo": "Guerra ou conflito armado no país (12 meses)", "ordem": 1, "valor": "Nem guerra nem conflito armado envolvendo um Estado; Período: nov/2025 a out/2026", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-10", "nivel": "pais", "fontes": [{"titulo": "UCDP - Uppsala Conflict Data Program (Universidade de Uppsala), eventos georreferenciados de violência armada com mortos (GED e candidate)", "url": "https://ucdp.uu.se/downloads/", "tipo": "especializada"}]}, {"link": "", "variavel": "conflito", "rotulo": "Violência armada perto do posto (12 meses)", "ordem": 2, "valor": "A até 25 km: 24 episódios do conflito armado (16 mortos); A até 100 km: 623 episódios do conflito armado (1.108 mortos) e 1 episódio de violência entre grupos armados ou contra civis (2 mortos); Período: nov/2025 a out/2026", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-10", "nivel": "cidade", "fontes": [{"titulo": "UCDP - Uppsala Conflict Data Program (Universidade de Uppsala), eventos georreferenciados de violência armada com mortos (GED e candidate)", "url": "https://ucdp.uu.se/downloads/", "tipo": "especializada"}]}, {"variavel": "homicidios", "rotulo": "Homicídios (cidade)", "ordem": 3, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"link": "", "variavel": "homicidios_pais", "rotulo": "Homicídios (país)", "ordem": 4, "valor": "0,6 por 100 mil habitantes (2022)", "unidade": "", "nota": "", "confianca": "alta", "data": "2022", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - homicídios intencionais por 100 mil habitantes (dado do UNODC), por país", "url": "https://data.worldbank.org/indicator/VC.IHR.PSRC.P5", "tipo": "oficial"}]}, {"link": "", "variavel": "transito", "rotulo": "Mortes no trânsito (país)", "ordem": 5, "valor": "5,3 mortes por 100 mil habitantes (2016)", "unidade": "", "nota": "", "confianca": "alta", "data": "2016", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - mortes no trânsito por 100 mil habitantes", "url": "https://data.worldbank.org/indicator/SH.STA.TRAF.P5", "tipo": "oficial"}]}, {"link": "", "variavel": "estabilidade", "rotulo": "Estabilidade política e ausência de violência (país)", "ordem": 6, "valor": "199.º de 208 países em 2025 (1.º = mais estável)", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial - Worldwide Governance Indicators: estabilidade política e ausência de violência", "url": "https://www.worldbank.org/en/publication/worldwide-governance-indicators", "tipo": "oficial"}]}, {"link": "", "variavel": "riscos_naturais", "rotulo": "Riscos naturais (país)", "ordem": 7, "valor": "Sem risco muito alto de terremoto, tsunami ou ciclone tropical", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-26", "nivel": "pais", "fontes": [{"titulo": "INFORM Risk - Joint Research Centre da Comissão Europeia, exposição a terremoto, tsunami e ciclone tropical (0 a 10)", "url": "https://drmkc.jrc.ec.europa.eu/inform-index", "tipo": "oficial"}]}]}, {"tema": "saude", "rotulo": "Saúde", "icone": "🏥", "bloco": "Essencial", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "O gasto com saúde no país é de USD 346 por pessoa por ano em 2023: USD 143 vêm do governo, USD 146 são pagos diretamente pelas famílias, USD 27 vêm de planos de saúde e outros gastos privados e USD 30 vêm de ajuda externa. No índice de cobertura de serviços essenciais de saúde da OMS, o país tem 65 pontos de 100 em 2023.\n\nPara referência, no Brasil são USD 1.010 por pessoa (2023): USD 446 vêm do governo, USD 265 são pagos diretamente pelas famílias e USD 299 vêm de planos de saúde e outros gastos privados. No índice da OMS, o Brasil tem 84 pontos.\n\nNo último ano, a média de partículas finas no ar (PM2,5) na cidade foi de 14 µg/m³ (Brasília: 7), com o nível mais alto em fevereiro.", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "OMS - índice de cobertura de serviços essenciais de saúde (UHC, 0 a 100), Global Health Observatory", "url": "https://www.who.int/data/gho/data/indicators/indicator-details/GHO/uhc-index-of-service-coverage", "tipo": "oficial"}, {"titulo": "Banco Mundial (WDI) - gasto com saúde por pessoa e suas partes (governo, famílias, planos e outros privados, ajuda externa) e médicos por mil habitantes", "url": "https://data.worldbank.org/topic/health", "tipo": "oficial"}, {"titulo": "Copernicus (CAMS), partículas finas PM2,5 - via API de qualidade do ar da Open-Meteo", "url": "https://open-meteo.com/en/docs/air-quality-api", "tipo": "oficial"}]}, {"link": "", "variavel": "emergencia", "rotulo": "Emergência", "ordem": 1, "valor": "101 (ambulância); 102 (bombeiros); 100 (polícia)", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia (en) - List of emergency telephone numbers, para países sem número no Wikidata", "url": "https://en.wikipedia.org/wiki/List_of_emergency_telephone_numbers", "tipo": "wikipedia"}]}, {"variavel": "sistema_publico", "rotulo": "Sistema público para o servidor", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "medicamentos", "rotulo": "Medicamentos: registro oficial do país", "ordem": 3, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"link": "", "variavel": "gasto", "rotulo": "Gasto com saúde (país)", "ordem": 4, "valor": "USD 346 por pessoa por ano (2023); Governo: USD 143; Pago diretamente pelas famílias: USD 146; Planos de saúde e outros privados: USD 27; Ajuda externa: USD 30", "unidade": "", "nota": "", "confianca": "alta", "data": "2023", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - gasto com saúde por pessoa e suas partes (governo, famílias, planos e outros privados, ajuda externa) e médicos por mil habitantes", "url": "https://data.worldbank.org/topic/health", "tipo": "oficial"}]}, {"link": "", "variavel": "cobertura", "rotulo": "Cobertura de serviços essenciais de saúde (país; OMS)", "ordem": 5, "valor": "65 de 100 (2023)", "unidade": "", "nota": "", "confianca": "alta", "data": "2023", "nivel": "pais", "fontes": [{"titulo": "OMS - índice de cobertura de serviços essenciais de saúde (UHC, 0 a 100), Global Health Observatory", "url": "https://www.who.int/data/gho/data/indicators/indicator-details/GHO/uhc-index-of-service-coverage", "tipo": "oficial"}]}, {"link": "", "variavel": "medicos", "rotulo": "Médicos (país)", "ordem": 6, "valor": "2,2 por mil habitantes (2018)", "unidade": "", "nota": "", "confianca": "alta", "data": "2018", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - gasto com saúde por pessoa e suas partes (governo, famílias, planos e outros privados, ajuda externa) e médicos por mil habitantes", "url": "https://data.worldbank.org/topic/health", "tipo": "oficial"}]}, {"link": "", "variavel": "ar", "rotulo": "Qualidade do ar", "ordem": 7, "valor": "PM2,5: média de 14 µg/m³ nos últimos 12 meses; Mês mais poluído: fevereiro (18 µg/m³)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Copernicus (CAMS), partículas finas PM2,5 - via API de qualidade do ar da Open-Meteo", "url": "https://open-meteo.com/en/docs/air-quality-api", "tipo": "oficial"}]}]}, {"tema": "voo", "rotulo": "Voo para o Brasil", "icone": "✈️", "bloco": "Essencial", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "Não há voo direto entre o Brasil e Ramala. De Brasília, o caminho usual é por São Paulo e mais uma conexão, por exemplo em Roma, Barcelona ou Madri (cerca de 16 h em voo, sem contar a espera nas conexões). Há também opções com uma conexão via Lisboa ou Miami.", "unidade": "", "nota": "VRA/ANAC, voos de passageiros realizados de out/2025 a set/2026", "confianca": "alta", "data": "2026-09", "nivel": "cidade", "fontes": [{"titulo": "ANAC - Voo Regular Ativo (VRA), arquivos mensais", "url": "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/", "tipo": "oficial"}, {"titulo": "Wikipédia em inglês - destinos dos aeroportos dos postos (seção Airlines and destinations), coletados por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "direto_brasil", "rotulo": "Voo direto para o Brasil", "ordem": 1, "valor": "Nenhum voo direto entre o Brasil e Ramala", "unidade": "", "nota": "VRA/ANAC, voos de passageiros realizados de out/2025 a set/2026", "confianca": "alta", "data": "2026-09", "nivel": "cidade", "fontes": [{"titulo": "ANAC - Voo Regular Ativo (VRA), arquivos mensais", "url": "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/", "tipo": "oficial"}]}, {"link": "", "variavel": "brasilia", "rotulo": "Ligações a partir de Brasília", "ordem": 2, "valor": "Brasília – Lisboa – Ramala (TAP → Arkia, El Al · ≈14 h em voo); Brasília – Miami – Ramala (Gol → El Al · ≈22 h em voo); Brasília – São Paulo – Roma – Ramala (ITA Airways, LATAM → Arkia, Bluebird Airways, El Al · ≈16 h em voo); Brasília – São Paulo – Barcelona – Ramala (LATAM → Arkia, Bluebird Airways, El Al · ≈16 h em voo); Brasília – São Paulo – Madri – Ramala (Iberia, LATAM, Air Europa, Air China → Air Europa, El Al · ≈17 h em voo)", "unidade": "", "nota": "VRA/ANAC, voos de passageiros realizados de out/2025 a set/2026", "confianca": "alta", "data": "2026-09", "nivel": "cidade", "fontes": [{"titulo": "ANAC - Voo Regular Ativo (VRA), arquivos mensais", "url": "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/", "tipo": "oficial"}, {"titulo": "Wikipédia em inglês - destinos dos aeroportos dos postos (seção Airlines and destinations), coletados por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}]}, {"tema": "idioma", "rotulo": "Idioma e religião", "icone": "🗣️", "bloco": "Rotina", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "O idioma oficial é o árabe. A maior religião é o islamismo (80,7%), seguida do judaísmo (13,1%), segundo dados de 2020.", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo da página de cada país (idiomas e religião, com o ano e a fonte citados lá), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "idioma", "rotulo": "Idioma", "ordem": 1, "valor": "árabe (oficial)", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo da página de cada país (idiomas e religião, com o ano e a fonte citados lá), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "religiao", "rotulo": "Religião e cultos", "ordem": 2, "valor": "islamismo: 80,7% (sunitas 71,2%, xiitas 0,1%, outras 9,4%); judaísmo: 13,1%; cristianismo: 0,9%; fé bahá'í: 0,1%; sem religião: 5,3%; dados de 2020", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo da página de cada país (idiomas e religião, com o ano e a fonte citados lá), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}]}, {"tema": "servicos", "rotulo": "Serviços", "icone": "🔌", "bloco": "Rotina", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "100% da população tem acesso à rede elétrica (2024) e 81% têm água potável segura (2024). Para referência, no Brasil são 100% com rede elétrica e 89% com água potável segura. A tensão é de 230 V: aparelhos de 220 V funcionam normalmente. Tomadas tipos C, D e H: plugues brasileiros finos de dois pinos costumam encaixar no tipo C. 87% da população usa internet.", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Banco Mundial (WDI) - acesso a eletricidade (EG.ELC.ACCS.ZS), água potável gerenciada de forma segura (SH.H2O.SMDW.ZS) e usuários de internet (IT.NET.USER.ZS)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "eletricidade", "rotulo": "Eletricidade", "ordem": 1, "valor": "230 V; tomadas tipos C, D e H: plugues brasileiros finos de dois pinos costumam encaixar no tipo C", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikidata - tensão (P2884) e tipos de tomada (P2853) por país, consultados por script", "url": "https://query.wikidata.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "internet_movel", "rotulo": "Internet móvel", "ordem": 2, "valor": "USD 13,53 por mês, plano mais barato com 5 GB de dados móveis (2025)", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "União Internacional de Telecomunicações (UIT) - ICT Price Baskets", "url": "https://www.itu.int/en/ITU-D/Statistics/Pages/ICTprices/default.aspx", "tipo": "oficial"}]}, {"link": "", "variavel": "internet", "rotulo": "Internet fixa", "ordem": 3, "valor": "USD 13,80 por mês, plano mais barato com banda larga fixa (5 GB) (2025)", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "União Internacional de Telecomunicações (UIT) - ICT Price Baskets", "url": "https://www.itu.int/en/ITU-D/Statistics/Pages/ICTprices/default.aspx", "tipo": "oficial"}]}, {"link": "", "variavel": "acesso_eletricidade", "rotulo": "Acesso a eletricidade", "ordem": 5, "valor": "100% da população com eletricidade (2024)", "unidade": "", "nota": "", "confianca": "alta", "data": "2024", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - acesso a eletricidade (EG.ELC.ACCS.ZS), água potável gerenciada de forma segura (SH.H2O.SMDW.ZS) e usuários de internet (IT.NET.USER.ZS)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "agua", "rotulo": "Água potável segura", "ordem": 6, "valor": "81% da população com água potável segura (2024)", "unidade": "", "nota": "", "confianca": "alta", "data": "2024", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - acesso a eletricidade (EG.ELC.ACCS.ZS), água potável gerenciada de forma segura (SH.H2O.SMDW.ZS) e usuários de internet (IT.NET.USER.ZS)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "internet_uso", "rotulo": "Uso de internet", "ordem": 7, "valor": "87% da população usa internet (2023)", "unidade": "", "nota": "", "confianca": "alta", "data": "2023", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - acesso a eletricidade (EG.ELC.ACCS.ZS), água potável gerenciada de forma segura (SH.H2O.SMDW.ZS) e usuários de internet (IT.NET.USER.ZS)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "https://en.wikipedia.org/wiki/AC_power_plugs_and_sockets", "variavel": "tomadas_ref", "rotulo": "Tipos de tomada (imagens)", "ordem": 9, "valor": "Ver os tipos de tomada, com imagens →", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - AC power plugs and sockets (tipos de tomada, com imagens)", "url": "https://en.wikipedia.org/wiki/AC_power_plugs_and_sockets", "tipo": "colaborativa"}]}]}, {"tema": "pagamentos", "rotulo": "Bancos e pagamentos", "icone": "💳", "bloco": "Rotina", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "Só 40% dos adultos têm conta em banco ou carteira digital (2024), contra 86% no Brasil: o dinheiro em espécie tem peso maior no dia a dia. A inflação foi de 10% em 2025, depois de chegar a 54% em 2024: preços em moeda local mudam rápido.", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Banco Mundial (WDI) - adultos com conta em banco ou carteira digital (Global Findex, FX.OWN.TOTL.ZS) e inflação ao consumidor (FP.CPI.TOTL.ZG)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"variavel": "instantaneo", "rotulo": "Transferência instantânea", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "cartao", "rotulo": "Cartão", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"link": "", "variavel": "conta", "rotulo": "Conta em banco ou carteira digital", "ordem": 3, "valor": "40% dos adultos (2024)", "unidade": "", "nota": "", "confianca": "alta", "data": "2024", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - adultos com conta em banco ou carteira digital (Global Findex, FX.OWN.TOTL.ZS) e inflação ao consumidor (FP.CPI.TOTL.ZG)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "inflacao", "rotulo": "Inflação", "ordem": 4, "valor": "9,8% em 2025; pico de 54% em 2024", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - adultos com conta em banco ou carteira digital (Global Findex, FX.OWN.TOTL.ZS) e inflação ao consumidor (FP.CPI.TOTL.ZG)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}]}, {"tema": "feriados", "rotulo": "Feriados", "icone": "📅", "bloco": "Rotina", "itens": [{"link": "", "variavel": "dias_uteis", "rotulo": "Feriados em dias úteis (próximos 12 meses)", "ordem": 1, "valor": "13", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Biblioteca holidays (feriados oficiais por país e região)", "url": "https://pypi.org/project/holidays/", "tipo": "oficial"}]}, {"link": "", "variavel": "lista", "rotulo": "Próximos feriados", "ordem": 2, "valor": "25/dez (sex) Catholic Christmas Day; 01/jan (sex) New Year's Day; 05/jan (ter) Isra' and Mi'raj; 07/jan (qui) Orthodox Christmas Day; 08/mar (seg) International Women's Day; 09/mar (ter) Eid al-Fitr; 10/mar (qua) Eid al-Fitr; 11/mar (qui) Eid al-Fitr; 17/mai (seg) Eid al-Adha; 18/mai (ter) Eid al-Adha; 19/mai (qua) Eid al-Adha; 07/set (ter) Independência do Brasil; 15/nov (seg) Independence Day", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Biblioteca holidays (feriados oficiais por país e região)", "url": "https://pypi.org/project/holidays/", "tipo": "oficial"}]}]}, {"tema": "vida_oficial", "rotulo": "Missões estrangeiras", "icone": "🤝", "bloco": "Rotina", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "A cidade reúne 44 embaixadas ou altos comissariados de outros países.", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Wikipédia em inglês - List of diplomatic missions in <país> (missões residentes na cidade), contadas por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "corpo_diplomatico", "rotulo": "Missões estrangeiras na cidade", "ordem": 1, "valor": "44 embaixadas ou altos comissariados na cidade", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Wikipédia em inglês - List of diplomatic missions in <país> (missões residentes na cidade), contadas por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}]}, {"tema": "ensino", "rotulo": "Ensino", "icone": "🏫", "bloco": "Situações específicas", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "O ano letivo escolar começa no segundo semestre (no Brasil, no primeiro semestre).", "unidade": "", "nota": "", "confianca": "alta", "data": "", "nivel": "cidade", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "ano_letivo", "rotulo": "Ano letivo escolar", "ordem": 1, "valor": "começa no segundo semestre", "unidade": "", "nota": "", "confianca": "alta", "data": "2026", "nivel": "pais", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "ano_universitario", "rotulo": "Ano letivo universitário", "ordem": 2, "valor": "começa no primeiro semestre", "unidade": "", "nota": "", "confianca": "alta", "data": "2024", "nivel": "pais", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "escola_obrigatoria", "rotulo": "Escolaridade obrigatória", "ordem": 3, "valor": "dos 6 anos, por 10 anos", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "pre_escola_gratuita", "rotulo": "Pré-escola gratuita", "ordem": 4, "valor": "1 ano garantido por lei", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"variavel": "escolas_internacionais_exemplos", "rotulo": "Escolas internacionais", "ordem": 6, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "escolas_ib_pais", "rotulo": "Escolas IB no país", "ordem": 7, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "taxa_escola_publica", "rotulo": "Taxa na escola pública", "ordem": 8, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "conjuge", "rotulo": "Cônjuge e dependentes", "icone": "👪", "bloco": "Situações específicas", "itens": [{"link": "", "variavel": "acordo_trabalho", "rotulo": "Trabalho remunerado de dependentes", "ordem": 1, "valor": "Sem acordo bilateral registrado no Concórdia", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Portal Concórdia (MRE, Divisão de Atos Internacionais) - acordos bilaterais sobre exercício de atividade remunerada por dependentes, situação de vigência", "url": "https://concordia.itamaraty.gov.br/", "tipo": "oficial"}]}]}, {"tema": "vistos_nao_dependentes", "rotulo": "Vistos para não dependentes", "icone": "🛂", "bloco": "Situações específicas", "itens": [{"link": "", "variavel": "turismo_brasileiros", "rotulo": "Visita (turista)", "ordem": 1, "valor": "sem visto", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - Visa requirements for Brazilian citizens (que cita o Timatic, da IATA), coletado por script", "url": "https://en.wikipedia.org/wiki/Visa_requirements_for_Brazilian_citizens", "tipo": "colaborativa"}]}, {"variavel": "residencia_longa_brasileiros", "rotulo": "Residência de longo prazo", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "empregados", "rotulo": "Empregados domésticos", "icone": "🧹", "bloco": "Situações específicas", "itens": [{"variavel": "salario_minimo", "rotulo": "Salário mínimo", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "Organização Internacional do Trabalho (OIT) - ILOSTAT, salário mínimo mensal (EAR_INEE_CUR_NB_A)", "url": "https://ilostat.ilo.org/topics/wages/", "tipo": "oficial"}], "vazio": true}, {"variavel": "contratacao", "rotulo": "Regras para contratar", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "custo", "rotulo": "Custo típico", "ordem": 3, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "automoveis", "rotulo": "Automóveis", "icone": "🚗", "bloco": "Situações específicas", "itens": [{"variavel": "carteira", "rotulo": "Carteira de motorista", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "importacao", "rotulo": "Carro com isenção de impostos", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"link": "", "variavel": "mao", "rotulo": "Mão de direção", "ordem": 3, "valor": "direita", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikidata - mão de direção (P1622) e telefones de emergência (P2852) por país, consultados por script", "url": "https://query.wikidata.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "convencao_transito", "rotulo": "Convenções de trânsito da ONU", "ordem": 4, "valor": "Parte da Convenção de Viena sobre Trânsito Viário (1968) desde 2019, como o Brasil", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Nações Unidas - UN Treaty Collection, Convenção sobre Trânsito Viário (Viena, 1968), situação dos participantes (XI-B-19)", "url": "https://treaties.un.org/Pages/ViewDetailsIII.aspx?src=TREATY&mtdsg_no=XI-B-19&chapter=11&Temp=mtdsg3&clang=_en", "tipo": "oficial"}]}]}, {"tema": "animais", "rotulo": "Animais de estimação", "icone": "🐕", "bloco": "Situações específicas", "itens": [{"link": "https://www.gov.br/agricultura/pt-br/assuntos/vigilancia-agropecuaria/animais-estimacao/sair-do-brasil/requisitos-em-pdf-publicados/demais-paises.pdf", "variavel": "classificacao_brasil", "rotulo": "Saindo do Brasil", "ordem": 0, "valor": "o MAPA não publica requisitos próprios para o país e vale o documento geral dos demais países. Exigências como autorização prévia de importação dependem do país de destino", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Ministério da Agricultura e Pecuária (MAPA/Vigiagro) - Sair do Brasil com cães e gatos: requisitos por país de destino e documento dos demais países, coletado por script", "url": "https://www.gov.br/agricultura/pt-br/assuntos/vigilancia-agropecuaria/animais-estimacao/sair-do-brasil", "tipo": "oficial"}]}, {"variavel": "permissao", "rotulo": "Entrada do animal", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "quarentena", "rotulo": "Quarentena", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "residencia_previa", "rotulo": "Residência prévia exigida", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "identificacao", "rotulo": "Identificação", "ordem": 3, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"link": "https://www.gov.br/agricultura/pt-br/assuntos/vigilancia-agropecuaria/animais-estimacao/sair-do-brasil/requisitos-em-pdf-publicados/demais-paises.pdf", "variavel": "vacina_antirrabica", "rotulo": "Vacina antirrábica", "ordem": 4, "valor": "em dia. Após a primeira dose ou com a vacina vencida, o certificado só sai 30 dias depois da aplicação", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Ministério da Agricultura e Pecuária (MAPA/Vigiagro) - Sair do Brasil com cães e gatos: requisitos por país de destino e documento dos demais países, coletado por script", "url": "https://www.gov.br/agricultura/pt-br/assuntos/vigilancia-agropecuaria/animais-estimacao/sair-do-brasil", "tipo": "oficial"}]}, {"variavel": "antiparasitario", "rotulo": "Antiparasitário", "ordem": 5, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "sorologia_antirrabica", "rotulo": "Sorologia antirrábica", "ordem": 5, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "Ministério da Agricultura e Pecuária (MAPA/Vigiagro) - Sair do Brasil com cães e gatos: requisitos por país de destino e documento dos demais países, coletado por script", "url": "https://www.gov.br/agricultura/pt-br/assuntos/vigilancia-agropecuaria/animais-estimacao/sair-do-brasil", "tipo": "oficial"}], "vazio": true}, {"variavel": "certificado", "rotulo": "Certificado", "ordem": 6, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "racas_restritas", "rotulo": "Raças restritas", "ordem": 8, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "lgbt", "rotulo": "LGBTQIA+", "icone": "🏳️‍🌈", "bloco": "Situações específicas", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "Relações entre pessoas do mesmo sexo não são crime. Não há casamento nem união civil entre pessoas do mesmo sexo.", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "casamento", "rotulo": "Casamento entre pessoas do mesmo sexo", "ordem": 1, "valor": "não há casamento nem união civil entre pessoas do mesmo sexo", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "criminalizacao", "rotulo": "Relações entre pessoas do mesmo sexo", "ordem": 2, "valor": "não criminalizadas (desde 1951)", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"variavel": "adocao", "rotulo": "Adoção por casais do mesmo sexo", "ordem": 3, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}], "vazio": true}, {"variavel": "identidade_genero", "rotulo": "Mudança legal de gênero", "ordem": 4, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}], "vazio": true}, {"variavel": "discriminacao", "rotulo": "Proteção contra discriminação", "ordem": 5, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}], "vazio": true}]}], "cambio": {"moeda": "ILS", "serie": [{"rotulo": "2025-11", "valor": 0.30640071084964915}, {"rotulo": "2025-11", "valor": 0.30690851057299817}, {"rotulo": "2025-12", "valor": 0.31338138514572234}, {"rotulo": "2026-01", "valor": 0.3232375472734913}, {"rotulo": "2026-02", "valor": 0.31885721573879217}, {"rotulo": "2026-03", "valor": 0.31620553359683795}, {"rotulo": "2026-04", "valor": 0.3388337342865856}, {"rotulo": "2026-05", "valor": 0.35650623885918004}, {"rotulo": "2026-06", "valor": 0.33606667562844467}, {"rotulo": "2026-07", "valor": 0.326594598125347}, {"rotulo": "2026-08", "valor": 0.33384522935167255}, {"rotulo": "2026-09", "valor": 0.3254572674607824}, {"rotulo": "2026-10", "valor": 0.31783364586975177}, {"rotulo": "2026-11 (hoje)", "valor": 0.29845400823733065}], "serie_brl": [{"rotulo": "2025-11", "valor": 1.6534}, {"rotulo": "2025-11", "valor": 1.6377}, {"rotulo": "2025-12", "valor": 1.7248}, {"rotulo": "2026-01", "valor": 1.6911}, {"rotulo": "2026-02", "valor": 1.6423}, {"rotulo": "2026-03", "valor": 1.6508}, {"rotulo": "2026-04", "valor": 1.6911}, {"rotulo": "2026-05", "valor": 1.8031}, {"rotulo": "2026-06", "valor": 1.7409}, {"rotulo": "2026-07", "valor": 1.6587}, {"rotulo": "2026-08", "valor": 1.7303}, {"rotulo": "2026-09", "valor": 1.6867}, {"rotulo": "2026-10", "valor": 1.7231}, {"rotulo": "2026-11 (hoje)", "valor": 1.7483}], "escala_usd": 1, "escala_brl": 1, "ultimo": "hoje"}, "mapa": null, "fundo": null, "clima": [{"mes": 1, "max": 11.8, "min": 6.9, "chuva": 165.0, "sol": 5.7, "luz": 10.41}, {"mes": 2, "max": 13.1, "min": 7.5, "chuva": 137.0, "sol": 6.1, "luz": 11.25}, {"mes": 3, "max": 16.5, "min": 9.6, "chuva": 103.0, "sol": 7.1, "luz": 12.16}, {"mes": 4, "max": 20.7, "min": 12.7, "chuva": 37.0, "sol": 8.9, "luz": 13.15}, {"mes": 5, "max": 24.7, "min": 15.9, "chuva": 8.0, "sol": 10.5, "luz": 13.91}, {"mes": 6, "max": 26.9, "min": 18.1, "chuva": 0.0, "sol": 11.9, "luz": 14.24}, {"mes": 7, "max": 28.4, "min": 19.6, "chuva": 0.0, "sol": 12.0, "luz": 13.93}, {"mes": 8, "max": 28.7, "min": 19.8, "chuva": 0.0, "sol": 11.3, "luz": 13.15}, {"mes": 9, "max": 27.2, "min": 18.6, "chuva": 5.0, "sol": 9.9, "luz": 12.18}, {"mes": 10, "max": 24.5, "min": 16.8, "chuva": 20.0, "sol": 8.5, "luz": 11.22}, {"mes": 11, "max": 19.0, "min": 13.0, "chuva": 72.0, "sol": 7.1, "luz": 10.4}, {"mes": 12, "max": 14.1, "min": 8.8, "chuva": 171.0, "sol": 5.9, "luz": 10.06}], "custo": [{"medida": "indice", "razao": 1.962}, {"medida": "supermercado", "razao": 1.5}, {"medida": "restaurante", "razao": 2.396}], "alimentos": {"produtos": [{"produto": "Arroz (kg)", "usd": 2.004, "brasilia": 0.888}, {"produto": "Feijão (kg)", "usd": 2.895, "brasilia": 1.492}, {"produto": "Farinha de trigo (kg)", "usd": 0.989, "brasilia": 0.801}, {"produto": "Óleo (litro)", "usd": 3.36, "brasilia": 1.428}, {"produto": "Açúcar (kg)", "usd": 1.3, "brasilia": 0.539}, {"produto": "Batata (kg)", "usd": 1.63, "brasilia": 1.024}], "legenda": "Mercado de West Bank, out/2026 (Programa Mundial de Alimentos). Brasília: média dos supermercados, out/2026 (DIEESE)."}, "comunidade": [{"ano": 2018, "valor": 5000}, {"ano": 2021, "valor": 6000}, {"ano": 2022, "valor": 6000}, {"ano": 2023, "valor": 6500}]}</script>
+<script>
+(function () {
+  var d = JSON.parse(document.getElementById('dados').textContent);
+  var NIVEL = { pais: 'vale para todo o país', cidade: 'vale para a cidade', posto: 'específico do posto' };
+  var CONF = { alta: 3, media: 2, baixa: 1, sem: 0 };
+  var CONF_TXT = { alta: 'confiança alta', media: 'confiança média', baixa: 'confiança baixa', sem: 'sem informação' };
+
+  function el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function selo(c) {
+    var s = el('span', 'conf c-' + c);
+    s.title = CONF_TXT[c];
+    for (var i = 0; i < 3; i++) s.appendChild(el('i', i < CONF[c] ? 'on' : ''));
+    return s;
+  }
+  // diferença atual calculada no navegador, para que "atualmente" seja sempre verdade
+  function minutosDoFuso(tz, quando) {
+    var p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit',
+      day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(quando);
+    var v = {}; p.forEach(function (x) { v[x.type] = +x.value; });
+    return (Date.UTC(v.year, v.month - 1, v.day, v.hour, v.minute) - quando.getTime()) / 60000;
+  }
+  function horasTexto(min) {
+    var s = min > 0 ? '+' : (min < 0 ? '−' : ''), a = Math.abs(Math.round(min)), h = Math.floor(a / 60), m = a % 60;
+    return (min === 0 ? '0' : s + h) + ' h' + (m ? m : '');
+  }
+  function diferencaAtual() {
+    try {
+      var agora = new Date();
+      agora.setSeconds(0, 0);
+      var atual = minutosDoFuso(d.fuso_iana, agora) - minutosDoFuso('America/Sao_Paulo', agora);
+      var txt = horasTexto(atual);
+      if (d.fuso_base_min !== null && atual !== d.fuso_base_min)
+        txt += ' — atualmente em horário de verão (normal é ' + horasTexto(d.fuso_base_min) + ')';
+      return txt;
+    } catch (e) { return null; }
+  }
+
+  function item(it, tema) {
+    var soData = it.variavel === 'diferenca_brasilia';
+    if (it.vazio && it.fontes.length) {
+      // sem dado para este posto, mas a fonte usada para a variável existe: mostra onde se procurou
+      var dv = el('details', 'vazio-com-fonte');
+      var sv = el('summary');
+      var rv = el('span', 'rotulo'); rv.appendChild(el('span', null, it.rotulo)); sv.appendChild(rv);
+      sv.appendChild(el('span', 'valor vazio-valor', it.valor));
+      dv.appendChild(sv);
+      var bv = el('div', 'detalhe');
+      bv.appendChild(el('p', 'nota', 'Fonte consultada, sem dado para este posto:'));
+      var ulv = el('ul');
+      it.fontes.forEach(function (f) { var li = el('li'); var a = el('a', null, f.titulo); a.href = f.url; a.target = '_blank'; a.rel = 'noopener'; li.appendChild(a); ulv.appendChild(li); });
+      bv.appendChild(ulv);
+      dv.appendChild(bv);
+      return dv;
+    }
+    if (it.vazio) {
+      var vz = el('div', 'item-vazio');
+      vz.appendChild(el('span', 'rotulo', it.rotulo));
+      vz.appendChild(el('span', 'valor', it.valor));
+      return vz;
+    }
+    var det = el('details', it.variavel === 'descricao' ? 'resumo' : null);
+    var sum = el('summary');
+    var rot = el('span', 'rotulo');
+    // parágrafo de abertura da aba: sem rótulo ("Em resumo"), direto no texto
+    rot.appendChild(el('span', null, it.variavel === 'descricao' ? '' : it.rotulo));
+    if (!it.link) rot.appendChild(selo(it.confianca));   // link (ex.: Numbeo) não é dado: sem selo nem data
+    sum.appendChild(rot);
+    var val = el('span', 'valor');
+    var texto = it.valor + (it.unidade ? ' ' + it.unidade : '');
+    if (it.variavel === 'diferenca_brasilia' && d.fuso_iana) texto = diferencaAtual() || texto;
+    // linha em branco (\n\n) separa parágrafos; "; " quebra a linha dentro do parágrafo
+    if (it.link) {
+      var al = el('a', null, texto);
+      al.href = it.link; al.target = '_blank'; al.rel = 'noopener';
+      al.addEventListener('click', function (e) { e.stopPropagation(); });
+      val.appendChild(al); texto = '';
+    }
+    if (texto) texto.split('\n\n').forEach(function (par, j) {
+      var alvo = val;
+      if (j) { alvo = el('span', 'par'); val.appendChild(alvo); }
+      par.split('; ').forEach(function (parte, i) {
+        if (i) alvo.appendChild(document.createElement('br'));
+        alvo.appendChild(document.createTextNode(parte));
+      });
+    });
+    sum.appendChild(val);
+    if (/^CONFLITO/i.test(it.nota)) sum.appendChild(el('span', 'conflito', '⚠ fontes divergem'));
+    det.appendChild(sum);
+
+    var box = el('div', 'detalhe');
+    if (it.nota && !soData) box.appendChild(el('p', 'nota', it.nota));
+    if (soData) {
+      // só a data de atualização
+    } else if (it.fontes.length) {
+      var ul = el('ul');
+      it.fontes.forEach(function (f) {
+        var li = el('li');
+        var a = el('a', null, f.titulo);
+        a.href = f.url; a.target = '_blank'; a.rel = 'noopener';
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+    } else {
+      box.appendChild(el('p', null, 'Sem fonte registrada.'));
+    }
+    // data do dado na fonte (coluna data_coleta): AAAA → "dados de 2023"; AAAA-MM → "dados de jul/2026";
+    // AAAA-MM-DD → "atualizado em 24/11/2026". Sem data (links, parágrafos de resumo), nada aparece.
+    var quando = dataDoDado(it.data);
+    if (quando && it.variavel !== 'descricao') box.appendChild(el('p', null, quando));
+    det.appendChild(box);
+    return det;
+  }
+
+  function dataDoDado(d) {
+    var MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    if (!d) return '';
+    if (/^\d{4}$/.test(d)) return 'dados de ' + d;
+    if (/^\d{4}-\d{2}$/.test(d)) return 'dados de ' + MES[+d.slice(5) - 1] + '/' + d.slice(0, 4);
+    return 'atualizado em ' + d.split('-').reverse().join('/');
+  }
+
+  // ---- fundo vetorial do mapa (OpenStreetMap via Protomaps; ver scripts/fundo_mapa.py) ----
+  function decPolyline(s) {
+    var i = 0, lat = 0, lng = 0, out = [];
+    while (i < s.length) {
+      var b, sh = 0, r = 0;
+      do { b = s.charCodeAt(i++) - 63; r |= (b & 31) << sh; sh += 5; } while (b >= 32);
+      lat += (r & 1) ? ~(r >> 1) : (r >> 1);
+      sh = 0; r = 0;
+      do { b = s.charCodeAt(i++) - 63; r |= (b & 31) << sh; sh += 5; } while (b >= 32);
+      lng += (r & 1) ? ~(r >> 1) : (r >> 1);
+      out.push([lat / 1e5, lng / 1e5]);
+    }
+    return out;
+  }
+  // fundo compactado (gzip + base64, ver gerar_ficha.py): descompactado pelo próprio navegador
+  function abrirFundo(F, pronto) {
+    if (!F.gz) { pronto(F); return; }
+    if (F.aberto) { pronto(F.aberto); return; }
+    if (typeof DecompressionStream === 'undefined') return;   // navegador antigo: mapa sem fundo
+    var bin = atob(F.gz), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text().then(function (t) {
+      var x = JSON.parse(t);
+      x.limites = F.limites;
+      F.aberto = x;
+      pronto(x);
+    });
+  }
+
+  function fundoVetorial(mapaL, F) {
+    var escuro = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+    var C = escuro
+      ? { mar: '#1c2b36', terra: '#212327', verde: '#23352a', areia: '#3a3628', aero: '#2b2b31', expressa: '#9a7a3e', principal: '#4b4e56', rua: '#35383e', balsa: '#4a6b80' }
+      : { mar: '#aad3df', terra: '#f3f0ea', verde: '#d3e7c3', areia: '#f4e8c4', aero: '#e7e4ec', expressa: '#f6c56a', principal: '#ffffff', rua: '#ffffff', balsa: '#6a9fbf' };
+    mapaL.getContainer().style.background = C.mar;
+    // painel próprio abaixo das linhas e marcadores: o fundo pode chegar depois (descompactação assíncrona)
+    if (!mapaL.getPane('fundo')) mapaL.createPane('fundo').style.zIndex = 250;
+    var tinta = L.canvas({ padding: 0.4, pane: 'fundo' }), g = F.grupos;
+    function area(lista, cor) {
+      if (!lista) return;
+      L.polygon(lista.map(function (p) { return p.map(decPolyline); }),
+        { renderer: tinta, stroke: false, fillColor: cor, fillOpacity: 1, interactive: false }).addTo(mapaL);
+    }
+    area(g.terra, C.terra); area(g.aeroporto, C.aero); area(g.verde, C.verde); area(g.areia, C.areia); area(g.agua, C.mar);
+    // espessura (px) por nível de zoom, de 11 a 17
+    var LARG = { rio: [1, 1, 2, 2, 3, 3, 4], rua: [0, 0, 0, 1.5, 2.5, 4, 7], principal: [1, 1.5, 2.5, 3.5, 5, 7, 10],
+                 expressa: [2, 2.5, 3.5, 4.5, 6, 8, 11], balsa: [1, 1, 1.5, 1.5, 2, 2, 2] };
+    var linhas = [['rio', g.rio, C.mar], ['balsa', g.balsa, C.balsa], ['rua', g.rua, C.rua],
+                  ['principal', g.via_principal, C.principal], ['expressa', g.via_expressa, C.expressa]]
+      .filter(function (l) { return l[1]; })
+      .map(function (l) {
+        return { tipo: l[0], camada: L.polyline(l[1].map(decPolyline), { renderer: tinta, color: l[2], weight: 1, opacity: 1,
+          interactive: false, dashArray: l[0] === 'balsa' ? '4 4' : null }) };
+      });
+    // o nome da própria cidade não ajuda e cobre nomes de estação no centro
+    var rotulos = F.rotulos.filter(function (r) { return r[0] !== d.cidade; }).map(function (r) {
+      return { z: r[3], m: L.marker([r[1], r[2]], { interactive: false, keyboard: false,
+        icon: L.divIcon({ className: 'rotulo-mapa' + (r[4] ? ' cidade' : ''), html: r[0], iconSize: null }) }) };
+    });
+    function ajustar() {
+      var z = Math.max(11, Math.min(17, Math.round(mapaL.getZoom()))), i = z - 11;
+      linhas.forEach(function (l) {
+        var w = LARG[l.tipo][i];
+        if (!w) { mapaL.removeLayer(l.camada); return; }
+        l.camada.setStyle({ weight: w });
+        if (!mapaL.hasLayer(l.camada)) l.camada.addTo(mapaL);
+      });
+      rotulos.forEach(function (r) { if (z >= r.z + 1) r.m.addTo(mapaL); else mapaL.removeLayer(r.m); });
+    }
+    mapaL.on('zoomend', ajustar);
+    ajustar();
+  }
+
+  // mostrador analógico; à noite (18h–6h) o fundo fica escuro, porque 12 h no mostrador não distinguem dia e noite
+  function mostrador() {
+    var ns = 'http://www.w3.org/2000/svg';
+    function n(tag, at) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); return e; }
+    var svg = n('svg', { viewBox: '0 0 100 100', width: '42', height: '42', 'class': 'analogico', 'aria-hidden': 'true' });
+    var face = n('circle', { cx: 50, cy: 50, r: 46, 'class': 'face' });
+    svg.appendChild(face);
+    for (var i = 0; i < 12; i++) {
+      var a = i * Math.PI / 6, r1 = i % 3 ? 38 : 34;
+      svg.appendChild(n('line', { x1: 50 + r1 * Math.sin(a), y1: 50 - r1 * Math.cos(a), x2: 50 + 42 * Math.sin(a), y2: 50 - 42 * Math.cos(a),
+        'class': 'marca', 'stroke-width': i % 3 ? 2 : 3.5 }));
+    }
+    var ph = n('line', { x1: 50, y1: 50, x2: 50, y2: 26, 'class': 'ponteiro', 'stroke-width': 5 });
+    var pm = n('line', { x1: 50, y1: 50, x2: 50, y2: 14, 'class': 'ponteiro', 'stroke-width': 3 });
+    svg.appendChild(ph); svg.appendChild(pm);
+    svg.appendChild(n('circle', { cx: 50, cy: 50, r: 4, 'class': 'eixo' }));
+    return { svg: svg, mostrar: function (h, m) {
+      ph.setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m / 2) + ' 50 50)');
+      pm.setAttribute('transform', 'rotate(' + (m * 6) + ' 50 50)');
+      svg.setAttribute('class', 'analogico' + (h >= 18 || h < 6 ? ' noite' : ''));
+    } };
+  }
+
+  function relogios() {
+    var box = el('div', 'relogios');
+    // na SERE (Brasília), um relógio só
+    var locais = d.fuso_iana === 'America/Sao_Paulo' ? [['Brasília', 'America/Sao_Paulo']]
+      : [['Brasília', 'America/Sao_Paulo'], [d.cidade, d.fuso_iana]];
+    var celulas = locais.map(function (l) {
+      var c = el('div', 'relogio');
+      var an = mostrador();
+      var onde = el('div', 'onde', l[0]), gmt = el('span', 'gmt');
+      onde.appendChild(gmt); c.appendChild(onde);
+      c.appendChild(an.svg);
+      var h = el('div', 'hora');
+      c.appendChild(h);
+      var cal = el('div', 'folhinha'), aros = el('div', 'aros'), folha = el('div', 'folha');
+      aros.appendChild(el('i')); aros.appendChild(el('i'));
+      var sem = el('div', 'topo'), num = el('div', 'num'), mes = el('div', 'mes');
+      folha.appendChild(num); folha.appendChild(mes);
+      cal.appendChild(aros); cal.appendChild(sem); cal.appendChild(folha);
+      c.appendChild(cal); box.appendChild(c);
+      var dia = { sem: sem, num: num, mes: mes, cal: cal, gmt: gmt };
+      return { tz: l[1], hora: h, dia: dia, an: an };
+    });
+    function atualizar() {
+      var agora = new Date();
+      celulas.forEach(function (c) {
+        try {
+          c.hora.textContent = agora.toLocaleTimeString('pt-BR', { timeZone: c.tz, hour: '2-digit', minute: '2-digit' });
+          var f = {};
+          new Intl.DateTimeFormat('pt-BR', { timeZone: c.tz, weekday: 'short', day: 'numeric', month: 'short' })
+            .formatToParts(agora).forEach(function (x) { f[x.type] = x.value.replace('.', ''); });
+          var o = Math.round(minutosDoFuso(c.tz, agora) / 15) * 15, oa = Math.abs(o);
+          c.dia.gmt.textContent = '(GMT ' + (o < 0 ? '−' : '+') + Math.floor(oa / 60) + (oa % 60 ? ':' + ('0' + oa % 60).slice(-2) : '') + ')';
+          c.dia.sem.textContent = f.weekday; c.dia.num.textContent = f.day; c.dia.mes.textContent = f.month;
+          c.dia.cal.title = agora.toLocaleDateString('pt-BR', { timeZone: c.tz, weekday: 'long', day: 'numeric', month: 'long' });
+          var p = c.hora.textContent.split(':');
+          c.an.mostrar(+p[0], +p[1]);
+        } catch (e) { c.hora.textContent = '—'; }
+      });
+    }
+    atualizar();
+    setInterval(atualizar, 15000);
+    return box;
+  }
+
+  // Custo de vida: uma barra por medida, em múltiplos do Brasil (linha vertical = Brasil)
+  var NOMES_CUSTO = { indice: 'Preços em geral', supermercado: 'Supermercado', restaurante: 'Restaurantes e hotéis',
+                      big_mac: 'Big Mac' };
+  function graficoCusto(c) {
+    var box = el('div', 'grafico');
+    var W = 340, lin = 30, pe = 132, pd = 34, pt = 8, H = pt + c.length * lin + 18;
+    var topo = Math.max(2, Math.ceil(Math.max.apply(null, c.map(function (p) { return p.razao; }))));
+    var x = function (v) { return pe + v * (W - pe - pd) / topo; };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Custo de vida em relação ao Brasil');
+    function no(tag, at, txt) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+    c.forEach(function (p, i) {
+      var y = pt + i * lin;
+      no('text', { x: pe - 8, y: y + 17, 'text-anchor': 'end', 'font-size': 12, fill: 'currentColor', 'fill-opacity': 0.8 }, NOMES_CUSTO[p.medida] || p.medida);
+      no('rect', { x: pe, y: y + 6, width: Math.max(1, x(p.razao) - pe), height: 15, rx: 2, fill: 'currentColor', 'fill-opacity': 0.55 });
+      no('text', { x: x(p.razao) + 4, y: y + 17, 'font-size': 12, fill: 'currentColor' }, p.razao.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '×');
+    });
+    var yb = pt + c.length * lin;
+    no('line', { x1: x(1), x2: x(1), y1: pt, y2: yb, stroke: 'currentColor', 'stroke-width': 1.5, 'stroke-dasharray': '3 3' });
+    no('text', { x: x(1), y: yb + 13, 'text-anchor': 'middle', 'font-size': 11, fill: 'currentColor', 'fill-opacity': 0.7 }, 'Brasil = 1');
+    box.appendChild(el('div', 'grafico-titulo', 'Em relação ao Brasil'));
+    box.appendChild(svg);
+    return box;
+  }
+
+  // Preços de alimentos: par de barras por produto (cidade do posto × Brasília), em USD por kg ou litro
+  function graficoAlimentos(dados, cidade) {
+    var lista = dados.produtos;
+    var box = el('div', 'grafico');
+    var W = 340, lin = 46, pe = 8, pd = 44, pt = 22, H = pt + lista.length * lin + 4;
+    var topo = Math.max.apply(null, lista.map(function (p) { return Math.max(p.usd, p.brasilia); }));
+    var x = function (v) { return pe + v * (W - pe - pd) / topo; };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Preços de alimentos em ' + cidade + ' e em Brasília, em USD');
+    function no(tag, at, txt) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+    var fmt = function (v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    // legenda
+    no('rect', { x: pe, y: 4, width: 10, height: 10, rx: 2, fill: 'currentColor', 'fill-opacity': 0.8 });
+    no('text', { x: pe + 14, y: 13, 'font-size': 11, fill: 'currentColor' }, cidade);
+    var lx = pe + 24 + cidade.length * 6.2;
+    no('rect', { x: lx, y: 4, width: 10, height: 10, rx: 2, fill: 'currentColor', 'fill-opacity': 0.25 });
+    no('text', { x: lx + 14, y: 13, 'font-size': 11, fill: 'currentColor' }, 'Brasília');
+    lista.forEach(function (p, i) {
+      var y = pt + i * lin;
+      no('text', { x: pe, y: y + 11, 'font-size': 12, fill: 'currentColor', 'fill-opacity': 0.8 }, p.produto);
+      no('rect', { x: pe, y: y + 15, width: Math.max(1, x(p.usd) - pe), height: 11, rx: 2, fill: 'currentColor', 'fill-opacity': 0.8 });
+      no('text', { x: x(p.usd) + 4, y: y + 24, 'font-size': 11, fill: 'currentColor' }, fmt(p.usd));
+      no('rect', { x: pe, y: y + 28, width: Math.max(1, x(p.brasilia) - pe), height: 11, rx: 2, fill: 'currentColor', 'fill-opacity': 0.25 });
+      no('text', { x: x(p.brasilia) + 4, y: y + 37, 'font-size': 11, fill: 'currentColor', 'fill-opacity': 0.75 }, fmt(p.brasilia));
+    });
+    box.appendChild(el('div', 'grafico-titulo', 'Alimentos: ' + cidade + ' e Brasília (USD por kg ou litro)'));
+    box.appendChild(svg);
+    box.appendChild(el('div', 'grafico-nota', dados.legenda));
+    return box;
+  }
+
+  // Presença brasileira: estimativa do MRE por ano-base (colunas; ano sem relatório fica vazio)
+  function graficoComunidade(serie) {
+    var box = el('div', 'grafico');
+    var ns = 'http://www.w3.org/2000/svg';
+    var a0 = serie[0].ano, a1 = serie[serie.length - 1].ano, n = a1 - a0 + 1;
+    var porAno = {}; serie.forEach(function (p) { porAno[p.ano] = p.valor; });
+    var W = 340, H = 150, pt = 20, pb = 22, larg = (W - 8) / n;
+    var topo = Math.max.apply(null, serie.map(function (p) { return p.valor; }));
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Estimativa da comunidade brasileira por ano-base');
+    function no(tag, at, txt) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+    var fmt = function (v) { return v >= 10000 ? Math.round(v / 1000) + ' mil' : v.toLocaleString('pt-BR'); };
+    for (var i = 0; i < n; i++) {
+      var ano = a0 + i, v = porAno[ano], cx = 4 + larg * i + larg / 2, bw = Math.min(34, larg * 0.6);
+      no('text', { x: cx, y: H - 6, 'font-size': 11, 'text-anchor': 'middle', fill: 'currentColor', 'fill-opacity': 0.75 }, String(ano));
+      if (v == null) {
+        no('text', { x: cx, y: H - pb - 4, 'font-size': 10, 'text-anchor': 'middle', fill: 'currentColor', 'fill-opacity': 0.5 }, 'sem relatório');
+        continue;
+      }
+      var h = Math.max(1, v * (H - pt - pb) / topo);
+      no('rect', { x: cx - bw / 2, y: H - pb - h, width: bw, height: h, rx: 2, fill: 'currentColor', 'fill-opacity': 0.55 });
+      no('text', { x: cx, y: H - pb - h - 4, 'font-size': 11, 'text-anchor': 'middle', fill: 'currentColor' }, fmt(v));
+    }
+    box.appendChild(el('div', 'grafico-titulo', 'Comunidade na jurisdição, por ano-base (estimativa do MRE)'));
+    box.appendChild(svg);
+    return box;
+  }
+
+  // alternância USD/BRL da aba Câmbio: só esconde/mostra itens e gráficos já desenhados
+  function seletorReferencia(sec) {
+    var box = el('div', 'referencia');
+    box.appendChild(el('span', null, 'Moeda de referência'));
+    var opcoes = el('div', 'opcoes');
+    ['usd', 'brl'].forEach(function (r) {
+      var b = el('button', null, r.toUpperCase());
+      b.type = 'button';
+      b.setAttribute('aria-pressed', r === 'usd' ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        sec.setAttribute('data-ref', r);
+        opcoes.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+      opcoes.appendChild(b);
+    });
+    box.appendChild(opcoes);
+    return box;
+  }
+
+  var MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  function graficoCambio(c, brl) {
+    var serie = brl ? c.serie_brl : c.serie;
+    var box = el('div', 'grafico ' + (c.serie_brl ? (brl ? 'ref-brl' : 'ref-usd') : ''));
+    var W = 340, H = 142, pe = 8, pd = 8, pt = 22, pb = 38;
+    var vs = serie.map(function (p) { return p.valor; });
+    var min = Math.min.apply(null, vs), max = Math.max.apply(null, vs);
+    var folga = (max - min) * 0.15 || max * 0.01; min -= folga; max += folga;
+    // faixa mínima de ±2% da média: oscilação ínfima (cotação estável) não vira um 'V' na escala automática
+    var meio = (max + min) / 2;
+    if (max - min < meio * 0.04) { min = meio * 0.98; max = meio * 1.02; }
+    var x = function (i) { return pe + i * (W - pe - pd) / (vs.length - 1); };
+    var y = function (v) { return pt + (max - v) * (H - pt - pb) / (max - min); };
+    // casas como na cotação (fatos_cambio.py): 0 a partir de 100, 3 abaixo de 1, senão 2
+    var fmt = function (v) { var k = v >= 100 ? 0 : v < 1 ? 3 : 2; return v.toLocaleString('pt-BR', { minimumFractionDigits: k, maximumFractionDigits: k }); };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); var ref = brl ? 'BRL' : 'USD', esc = brl ? c.escala_brl : c.escala_usd;
+    // moeda local primeiro, como na cotação: "AUD 1 em USD"
+    var titulo = c.moeda + ' ' + (esc > 1 ? esc.toLocaleString('pt-BR') : '1') + ' em ' + ref + ' — últimos 12 meses';
+    svg.setAttribute('aria-label', titulo);
+    var pts = vs.map(function (v, i) { return x(i) + ',' + y(v); }).join(' ');
+    var linha = document.createElementNS(ns, 'polyline');
+    linha.setAttribute('points', pts); linha.setAttribute('fill', 'none');
+    linha.setAttribute('stroke', 'currentColor'); linha.setAttribute('stroke-width', '2'); linha.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(linha);
+    function texto(tx, xx, yy, anc) {
+      var t = document.createElementNS(ns, 'text'); t.textContent = tx;
+      t.setAttribute('x', xx); t.setAttribute('y', yy); t.setAttribute('text-anchor', anc || 'start');
+      t.setAttribute('font-size', '11'); t.setAttribute('fill', 'currentColor'); svg.appendChild(t);
+    }
+    var ult = vs.length - 1;
+    var ponto = document.createElementNS(ns, 'circle');
+    ponto.setAttribute('cx', x(ult)); ponto.setAttribute('cy', y(vs[ult])); ponto.setAttribute('r', 3.5); ponto.setAttribute('fill', 'currentColor');
+    svg.appendChild(ponto);
+    // rótulo das pontas acima do ponto, ou abaixo quando a linha sobe a partir dele (não cruza o texto)
+    var acima = function (i, viz) { return y(vs[viz]) >= y(vs[i]) - 4; };
+    texto(fmt(vs[0]), x(0), acima(0, 1) ? y(vs[0]) - 7 : y(vs[0]) + 16, 'start');
+    texto(fmt(vs[ult]), x(ult), acima(ult, ult - 1) ? y(vs[ult]) - 7 : y(vs[ult]) + 16, 'end');
+    var r0 = serie[0].rotulo;
+    texto(MESES[+r0.slice(5, 7) - 1] + '/' + r0.slice(2, 4), x(0), H - 6, 'start');
+    texto(c.ultimo || 'hoje', x(ult), H - 6, 'end');
+    box.appendChild(el('div', 'grafico-titulo', titulo));
+    box.appendChild(svg);
+    return box;
+  }
+
+  function graficoClima(c) {
+    var box = el('div', 'grafico');
+    var W = 340, H = 150, pe = 32, pd = 14, pt = 12, pb = 22;
+    var maxs = c.map(function (p) { return p.max; }), mins = c.map(function (p) { return p.min; });
+    var lo = Math.min(0, Math.floor(Math.min.apply(null, mins) / 5) * 5), hi = Math.max(35, Math.ceil(Math.max.apply(null, maxs) / 5) * 5);
+    var x = function (i) { return pe + i * (W - pe - pd) / 11; };
+    var y = function (v) { return pt + (hi - v) * (H - pt - pb) / (hi - lo); };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Temperatura mínima e máxima média por mês');
+    function no(tag, at) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); svg.appendChild(e); return e; }
+    for (var g = lo; g <= hi; g += 10) {
+      no('line', { x1: pe, x2: W - pd, y1: y(g), y2: y(g), stroke: 'currentColor', 'stroke-opacity': g === 0 ? 0.35 : 0.12 });
+      var tg = no('text', { x: pe - 4, y: y(g) + 4, 'text-anchor': 'end', 'font-size': 10, fill: 'currentColor', 'fill-opacity': 0.6 }); tg.textContent = g + '°';
+    }
+    var area = maxs.map(function (v, i) { return x(i) + ',' + y(v); }).concat(mins.slice().reverse().map(function (v, i) { return x(11 - i) + ',' + y(v); }));
+    no('polygon', { points: area.join(' '), fill: 'var(--destaque)', 'fill-opacity': 0.12 });
+    no('polyline', { points: maxs.map(function (v, i) { return x(i) + ',' + y(v); }).join(' '), fill: 'none', stroke: '#c0502e', 'stroke-width': 2 });
+    no('polyline', { points: mins.map(function (v, i) { return x(i) + ',' + y(v); }).join(' '), fill: 'none', stroke: '#2e6fa8', 'stroke-width': 2 });
+    MESES.forEach(function (m, i) { var t = no('text', { x: x(i), y: H - 6, 'text-anchor': 'middle', 'font-size': 10, fill: 'currentColor', 'fill-opacity': 0.7 }); t.textContent = m[0].toUpperCase(); });
+    box.appendChild(el('div', 'grafico-titulo', 'Temperatura média por mês (°C) — mínima e máxima'));
+    box.appendChild(svg);
+    var temLuz = c.every(function (p) { return p.luz != null; }), temSol = c.every(function (p) { return p.sol != null; });
+    if (temLuz) box.appendChild(painelMensal(c, {
+      titulo: 'Horas por dia — luz do dia' + (temSol ? ' (linha) e sol (barras)' : ''), topo: 24, passo: 6, sufixo: 'h',
+      barras: temSol ? c.map(function (p) { return p.sol; }) : null, corBarra: '#d9a21b',
+      linha: c.map(function (p) { return p.luz; }), corLinha: '#b07d0c', rotulo: 'Duração do dia e horas de sol por mês' }));
+    if (c.every(function (p) { return p.chuva != null; })) {
+      var maxC = Math.max.apply(null, c.map(function (p) { return p.chuva; }));
+      var passoC = maxC > 150 ? 100 : 50;
+      box.appendChild(painelMensal(c, {
+        titulo: c.some(function (p) { return p.neve > 0; }) ? 'Precipitação por mês (chuva e neve, em mm)' : 'Chuva por mês (mm)', topo: Math.max(passoC, Math.ceil(maxC / passoC) * passoC), passo: passoC, sufixo: '',
+        barras: c.map(function (p) { return p.chuva; }), corBarra: '#2e6fa8', rotulo: 'Chuva média por mês' }));
+    }
+    return box;
+  }
+
+  // painel de 12 meses com barras e/ou linha, no mesmo alinhamento horizontal do gráfico de temperatura
+  function painelMensal(c, o) {
+    var W = 340, H = 110, pe = 32, pd = 14, pt = 8, pb = 22;
+    var x = function (i) { return pe + i * (W - pe - pd) / 11; };
+    var y = function (v) { return pt + (o.topo - v) * (H - pt - pb) / o.topo; };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', o.rotulo);
+    function no(tag, at) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); svg.appendChild(e); return e; }
+    for (var g = 0; g <= o.topo; g += o.passo) {
+      no('line', { x1: pe, x2: W - pd, y1: y(g), y2: y(g), stroke: 'currentColor', 'stroke-opacity': g === 0 ? 0.35 : 0.12 });
+      var tg = no('text', { x: pe - (W - pe - pd) / 11 * 0.3 - 2, y: y(g) + 4, 'text-anchor': 'end', 'font-size': 10, fill: 'currentColor', 'fill-opacity': 0.6 }); tg.textContent = g + o.sufixo;
+    }
+    var larg = (W - pe - pd) / 11 * 0.55;
+    if (o.barras) o.barras.forEach(function (v, i) {
+      no('rect', { x: x(i) - larg / 2, y: y(v), width: larg, height: Math.max(0, y(0) - y(v)), fill: o.corBarra, 'fill-opacity': o.linha ? 0.45 : 0.75, rx: 1.5 });
+    });
+    if (o.linha) no('polyline', { points: o.linha.map(function (v, i) { return x(i) + ',' + y(v); }).join(' '), fill: 'none', stroke: o.corLinha, 'stroke-width': 2 });
+    MESES.forEach(function (m, i) { var t = no('text', { x: x(i), y: H - 6, 'text-anchor': 'middle', 'font-size': 10, fill: 'currentColor', 'fill-opacity': 0.7 }); t.textContent = m[0].toUpperCase(); });
+    var bloco = document.createElement('div');
+    bloco.appendChild(el('div', 'grafico-titulo', o.titulo));
+    bloco.appendChild(svg);
+    return bloco;
+  }
+
+  // ---------- mapa de moradia (toque livre) ----------
+  function fmtN(v) { return Math.round(v).toLocaleString('pt-BR'); }
+  function mapa(m) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var G = m.grade, P = m.proj, VB = m.viewbox;
+    var box = el('div', 'mapa');
+    var tela = el('div', 'mapa-tela');
+    var svg = document.createElementNS(ns, 'svg');
+    var vb = VB.slice();
+    var estrela, marca;
+    function px() { return vb[2] / (svg.clientWidth || 360); }
+    function aplicar() {
+      svg.setAttribute('viewBox', vb.join(' '));
+      if (estrela) estrela.setAttribute('font-size', 24 * px());
+      if (marca) { marca.setAttribute('r', 7 * px()); marca.setAttribute('stroke-width', 3 * px()); }
+    }
+    function novo(tag, at) {
+      var e = document.createElementNS(ns, tag);
+      for (var k in at) e.setAttribute(k, at[k]);
+      return e;
+    }
+    svg.appendChild(novo('path', { d: m.contorno, 'class': 'terra' }));
+    m.linhas.forEach(function (l) {
+      var p = novo('path', { d: l.d, 'class': 'linha', stroke: l.cor });
+      p.style.strokeWidth = l.larg * 1.6 + 'px';
+      svg.appendChild(p);
+    });
+    estrela = novo('text', { x: 0, y: 0, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#1d1f22', stroke: '#fff', 'stroke-width': '1.5', 'class': 'estrela' });
+    estrela.textContent = '★';
+    marca = novo('circle', { cx: 0, cy: 0, r: 7, 'class': 'marca' });
+    marca.style.display = 'none';
+    svg.appendChild(marca);
+    svg.appendChild(estrela);
+
+    var info = el('div', 'mapa-info');
+    var horario = 'normal', ultimo = [0, 0];
+    var seletor = el('div', 'mapa-horario');
+    [['normal', 'Horário normal'], ['pico', 'Horário de pico']].forEach(function (h) {
+      var b = el('button', h[0] === horario ? 'ativo' : null, h[1]);
+      b.onclick = function () {
+        horario = h[0];
+        Array.prototype.forEach.call(seletor.children, function (c) { c.classList.remove('ativo'); });
+        b.classList.add('ativo'); mostrar(ultimo[0], ultimo[1]);
+      };
+      seletor.appendChild(b);
+    });
+
+    function celula(x, y) {
+      var c = Math.floor((x - G.x0) / G.passo), r = Math.floor((y - G.y0) / G.passo);
+      if (c < 0 || r < 0 || c >= G.cols || r >= G.rows) return -1;
+      return r * G.cols + c;
+    }
+    function geo(x, y) { return [P.lon0 + x / 100 / P.kx, P.lat0 - y / 100 / P.ky]; }
+    function linkPortal(url, area, x, y) {
+      var ll = geo(x, y), d = 0.012;
+      var sub = { lat: ll[1].toFixed(5), lon: ll[0].toFixed(5), latmin: (ll[1] - d).toFixed(5), latmax: (ll[1] + d).toFixed(5),
+                  lonmin: (ll[0] - d).toFixed(5), lonmax: (ll[0] + d).toFixed(5),
+                  area_slug: area ? area.slug : '', area_pnome: area ? area.pnome : '', cep: area ? area.cep : '' };
+      return url.replace(/\{(\w+)\}/g, function (_, k) { return sub[k] !== undefined ? sub[k] : ''; });
+    }
+    function linhaInfo(rot, val) {
+      var l = el('div', 'mi-linha'); l.appendChild(el('span', 'mi-rot', rot)); l.appendChild(el('span', 'mi-val', val)); return l;
+    }
+    function mostrar(x, y) {
+      ultimo = [x, y];
+      var k = celula(x, y);
+      info.textContent = '';
+      if (k < 0 || G.t[k] < 0) {
+        esconderMarca();
+        info.appendChild(el('div', 'mi-aviso', 'Ponto fora da área coberta pelo mapa.'));
+        return;
+      }
+      porMarca(x, y);
+      var area = G.a[k] >= 0 ? m.areas[G.a[k]] : null;
+      info.appendChild(el('div', 'nome', area ? area.nome : 'Ponto escolhido'));
+      // deslocamento
+      var t = G.t[k], e = G.e[k], w = G.w[k];
+      var dkm = Math.hypot(x, y) / 100, C = m.carro;
+      if (C.osrm) {
+        // sem índice de trânsito para a cidade: tempo de rota do OpenStreetMap, sem trânsito
+        info.appendChild(linhaInfo('Carro (sem trânsito)', G.c[k] >= 0 ? '≈ ' + Math.max(1, G.c[k]) + ' min' : 'sem informação'));
+      } else {
+        var carro = Math.round(C.fixo + dkm * C.desvio * C[horario] / 10);
+        if (!m.sem_transporte) info.appendChild(linhaInfo('Transporte público', '≈ ' + t + ' min'));
+        info.appendChild(linhaInfo('Carro (' + (horario === 'pico' ? 'pico' : 'horário normal') + ')', '≈ ' + carro + ' min'));
+      }
+      if (m.sem_transporte) {
+        info.appendChild(linhaInfo('Transporte público', 'sem informação'));
+      } else if (e >= 0) {
+        var nomeE = m.estacoes[e], rotE = nomeE === 'ponto de ônibus' ? 'Embarque' : 'Estação';
+        info.appendChild(linhaInfo(rotE, nomeE + (w < 0 ? ' (ônibus, ≈ ' + (-w) + ' min)' : ' (' + w + ' min a pé)')));
+      } else {
+        var cx = G.x0 + (k % G.cols + 0.5) * G.passo, cy = G.y0 + (Math.floor(k / G.cols) + 0.5) * G.passo;
+        var pe = Math.hypot(cx, cy) / 100 * m.caminhada_min_km;
+        info.appendChild(linhaInfo('Estação', Math.abs(pe - t) < 1 ? 'nenhuma — a pé até o posto' : 'nenhuma — ônibus até o posto'));
+      }
+      // aluguel
+      var al = area && area.ref !== null ? m.aluguel[String(area.ref)] : null;
+      if (al) {
+        var ref = m.areas[area.ref].nome !== area.nome ? ' (referência: ' + al.rotulo + ')' : '';
+        info.appendChild(el('div', 'mi-sub', 'Aluguel' + ref));
+        ['1', '2', '3'].forEach(function (q) {
+          var v = al.q[q]; if (!v) return;
+          var local = al.moeda + ' ' + fmtN(v.local) + (al.periodo === 'semana' ? '/semana' : '');
+          info.appendChild(linhaInfo(q + (q === '1' ? ' quarto' : ' quartos'), 'USD ' + fmtN(v.usd) + '/mês' + (al.moeda === 'USD' ? '' : ' · ' + local)));
+        });
+        info.appendChild(el('div', 'mi-fonte', al.fonte));
+      } else {
+        info.appendChild(linhaInfo('Aluguel', 'sem informação'));
+      }
+      // link genérico (sem {marcador} no endereço) não leva à área tocada: o texto não promete isso
+      if (m.portais.length === 1) {
+        var p1 = m.portais[0];
+        var a = el('a', 'mi-link', 'Ver anúncios ' + (p1.url.indexOf('{') >= 0 ? 'nesta área ' : '') + 'no ' + p1.nome + ' →');
+        a.href = linkPortal(p1.url, area, x, y); a.target = '_blank'; a.rel = 'noopener';
+        info.appendChild(a);
+      } else if (m.portais.length > 1) {
+        var lp = el('div', 'mi-link');
+        lp.appendChild(document.createTextNode('Ver anúncios: '));
+        m.portais.forEach(function (p, i) {
+          if (i) lp.appendChild(document.createTextNode(' · '));
+          var ap = el('a', null, p.nome + (p.url.indexOf('{') >= 0 ? ' (nesta área)' : ''));
+          ap.href = linkPortal(p.url, area, x, y); ap.target = '_blank'; ap.rel = 'noopener';
+          lp.appendChild(ap);
+        });
+        info.appendChild(lp);
+      }
+    }
+
+    function pontoSvg(e) {
+      var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
+    function zoom(f) {
+      var cx = vb[0] + vb[2] / 2, cy = vb[1] + vb[3] / 2;
+      var w = Math.min(VB[2] * 1.2, Math.max(VB[2] / 40, vb[2] / f)), h = w * vb[3] / vb[2];
+      vb = [cx - w / 2, cy - h / 2, w, h]; aplicar();
+    }
+    var ini = null, arrastou = false;
+    svg.addEventListener('pointerdown', function (e) { ini = [e.clientX, e.clientY, vb[0], vb[1]]; arrastou = false; });
+    svg.addEventListener('pointermove', function (e) {
+      if (!ini) return;
+      var r = svg.getBoundingClientRect(), k = vb[2] / r.width;
+      if (Math.abs(e.clientX - ini[0]) + Math.abs(e.clientY - ini[1]) > 6) arrastou = true;
+      if (!arrastou) return;
+      vb[0] = ini[2] - (e.clientX - ini[0]) * k; vb[1] = ini[3] - (e.clientY - ini[1]) * k; aplicar();
+    });
+    svg.addEventListener('pointerup', function (e) {
+      if (ini && !arrastou) { var p = pontoSvg(e); mostrar(p.x, p.y); }
+      ini = null;
+    });
+    window.addEventListener('pointerup', function () { ini = null; });
+
+    function esconderMarca() { marca.style.display = 'none'; }
+    function porMarca(x, y) { marca.setAttribute('cx', x); marca.setAttribute('cy', y); marca.style.display = ''; }
+
+    if (window.L) {
+      // mapa de ruas (CARTO/OpenStreetMap); a lógica de toque é a mesma
+      var div = el('div', 'leaflet');
+      box.appendChild(div);
+      box.appendChild(el('div', 'mapa-dica', 'Toque em qualquer ponto do mapa. ★ = posto.'));
+      if (!m.carro.osrm) box.appendChild(seletor);
+      box.appendChild(info);
+      setTimeout(function () {
+        var mapaL = L.map(div, { zoomControl: true, minZoom: 11, maxZoom: 17 }).setView([P.lat0, P.lon0], 13);
+        div.mapaL = mapaL;   // referência para testes automáticos
+        if (d.fundo) {
+          // fundo desenhado aqui mesmo, sem imagens de fora (o SharePoint bloqueia)
+          var lim = d.fundo.limites;
+          mapaL.setMaxBounds([[lim[0], lim[1]], [lim[2], lim[3]]]).options.maxBoundsViscosity = 1;
+          abrirFundo(d.fundo, function (F) { fundoVetorial(mapaL, F); });
+          mapaL.attributionControl.setPrefix(false).addAttribution('&copy; OpenStreetMap');
+        }
+        m.linhas.forEach(function (l) {
+          if (l.larg < 0.9) return;
+          L.polyline(l.geo, { color: l.cor, weight: l.larg * 1.8, opacity: 0.7, interactive: false }).addTo(mapaL);
+        });
+        if (m.estacoes_geo && m.estacoes_geo.length) {
+          // estações: bolinha a partir do zoom 13, nome a partir do 15
+          var tintaE = L.canvas({ padding: 0.4 });
+          var estB = m.estacoes_geo.map(function (s) {
+            return L.circleMarker([s[1], s[2]], { renderer: tintaE, radius: 3, color: '#1d1f22', weight: 1.5,
+              fillColor: '#ffffff', fillOpacity: 1, interactive: false });
+          });
+          var estN = m.estacoes_geo.map(function (s) {
+            return L.marker([s[1], s[2]], { interactive: false, keyboard: false,
+              icon: L.divIcon({ className: 'rotulo-estacao', html: s[0], iconSize: null }) });
+          });
+          var ajustarEst = function () {
+            var z = mapaL.getZoom();
+            // paradas só de bonde/VLT (s[3] = 1) entram dois níveis de zoom depois
+            estB.forEach(function (b, i) {
+              var menor = m.estacoes_geo[i][3], zb = menor ? 15 : 13;
+              if (z >= zb) { b.setRadius(z >= 15 && !menor ? 5 : 3); if (!mapaL.hasLayer(b)) b.addTo(mapaL); } else mapaL.removeLayer(b);
+            });
+            estN.forEach(function (n, i) {
+              if (z >= (m.estacoes_geo[i][3] ? 16 : 15)) { if (!mapaL.hasLayer(n)) n.addTo(mapaL); } else mapaL.removeLayer(n);
+            });
+          };
+          mapaL.on('zoomend', ajustarEst);
+          ajustarEst();
+        }
+        L.marker([P.lat0, P.lon0], { interactive: false, icon: L.divIcon({ className: 'estrela-ll', html: '★', iconSize: [26, 26] }) }).addTo(mapaL);
+        var circ = null;
+        esconderMarca = function () { if (circ) { mapaL.removeLayer(circ); circ = null; } };
+        porMarca = function (x, y) {
+          var ll = geo(x, y);
+          if (!circ) circ = L.circleMarker([ll[1], ll[0]], { radius: 8, color: '#1f5c44', weight: 3, fillColor: '#fff', fillOpacity: 1 }).addTo(mapaL);
+          else circ.setLatLng([ll[1], ll[0]]);
+        };
+        mapaL.on('click', function (e) {
+          mostrar((e.latlng.lng - P.lon0) * P.kx * 100, -(e.latlng.lat - P.lat0) * P.ky * 100);
+        });
+        mostrar(0, 0);
+        var det = div.closest('details');
+        if (det) det.addEventListener('toggle', function () {
+          if (det.open) { mapaL.invalidateSize(); mapaL.setView([P.lat0, P.lon0], 13); }
+        });
+      }, 0);
+      return box;
+    }
+
+    tela.appendChild(svg);
+    var zb = el('div', 'mapa-zoom');
+    var mais = el('button', null, '+'), menos = el('button', null, '−');
+    mais.onclick = function () { zoom(1.6); }; menos.onclick = function () { zoom(1 / 1.6); };
+    zb.appendChild(mais); zb.appendChild(menos); tela.appendChild(zb);
+    box.appendChild(tela);
+    box.appendChild(el('div', 'mapa-dica', 'Toque em qualquer ponto do mapa. ★ = posto.'));
+    box.appendChild(seletor);
+    box.appendChild(info);
+    // começa com ~16 km de largura centrado no posto e com o posto selecionado
+    var larg = Math.min(VB[2], 1600);
+    vb = [-larg / 2, -larg / 2 * 340 / 360, larg, larg * 340 / 360];
+    aplicar();
+    setTimeout(function () { var r = svg.clientHeight / (svg.clientWidth || 360); vb[3] = vb[2] * r; vb[1] = -vb[3] / 2; aplicar(); }, 0);
+    mostrar(0, 0);
+    return box;
+  }
+
+  var app = document.getElementById('app');
+  // o link "← Postos" fica no HTML, não é criado aqui: no SharePoint, links criados por script não abrem
+  app.appendChild(el('div', 'local', d.cidade + ' · ' + d.pais));
+  app.appendChild(el('h1', null, d.posto));
+  app.appendChild(el('p', 'endereco', d.endereco));
+
+  var leg = el('div', 'legenda');
+  ['alta', 'media', 'baixa'].forEach(function (c) {
+    var s = el('span'); s.appendChild(selo(c)); s.appendChild(document.createTextNode(' ' + CONF_TXT[c]));
+    leg.appendChild(s);
+  });
+  app.appendChild(leg);
+
+  var blocoAtual = null, alvo = app;
+  d.temas.forEach(function (t) {
+    if (t.bloco && t.bloco !== blocoAtual) {
+      blocoAtual = t.bloco; alvo = el('details', 'bloco'); alvo.open = false;
+      alvo.appendChild(el('summary', null, t.bloco)); app.appendChild(alvo);
+    }
+    var sec = el('details', 'tema');
+    sec.open = false;
+    sec.appendChild(el('summary', null, t.icone + '  ' + t.rotulo));
+    if (t.tema === 'fuso' && d.fuso_iana) sec.appendChild(relogios());
+    if (t.tema === 'moradia' && d.mapa) sec.appendChild(mapa(d.mapa));
+    // no clima, o resumo em texto vem antes do gráfico
+    var antes = t.tema === 'clima' ? t.itens.filter(function (it) { return it.variavel === 'descricao'; }) : [];
+    antes.forEach(function (it) { sec.appendChild(item(it, t.tema)); });
+    if (t.tema === 'clima' && d.clima && d.clima.length === 12) sec.appendChild(graficoClima(d.clima));
+    if (t.tema === 'custo_vida' && d.custo && d.custo.length) sec.appendChild(graficoCusto(d.custo));
+    if (t.tema === 'custo_vida' && d.alimentos) sec.appendChild(graficoAlimentos(d.alimentos, d.cidade));
+    if (t.tema === 'presenca' && d.comunidade) sec.appendChild(graficoComunidade(d.comunidade));
+    var duasRef = t.tema === 'cambio' && d.cambio && d.cambio.serie_brl;
+    if (duasRef) { sec.setAttribute('data-ref', 'usd'); sec.appendChild(seletorReferencia(sec)); }
+    if (t.tema === 'cambio' && d.cambio && d.cambio.serie.length > 1) {
+      sec.appendChild(graficoCambio(d.cambio, false));
+      if (duasRef) sec.appendChild(graficoCambio(d.cambio, true));
+    }
+    t.itens.forEach(function (it) {
+      if (antes.indexOf(it) >= 0) return;
+      var no = item(it, t.tema);
+      if (duasRef) {
+        if (/_brl$/.test(it.variavel)) no.classList.add('ref-brl');
+        else if (it.variavel === 'cotacao') no.classList.add('ref-usd');
+      }
+      sec.appendChild(no);
+    });
+    alvo.appendChild(sec);
+  });
+
+  app.appendChild(el('footer', null, 'Toque em um item para ver a fonte.'));
+})();
+</script>
+</body>
+</html>

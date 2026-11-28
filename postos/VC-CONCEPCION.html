@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vice-Consulado em Concepción</title>
+<link rel="stylesheet" href="../comum/barlow.css">
+<style>
+  :root {
+    --fundo: #f6f5f2; --cartao: #ffffff; --texto: #1d1f22; --suave: #6b6f76;
+    --linha: #e6e4df; --destaque: #23533f; --alerta: #b4532a; --medio: #b08a1e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --fundo: #141517; --cartao: #1e2023; --texto: #ecebe8; --suave: #9a9ea5;
+            --linha: #2e3034; --destaque: #7cc4a2; --alerta: #e58b62; --medio: #d9b44a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto);
+         font: 16px/1.4 Barlow, system-ui, sans-serif; }
+  main { max-width: 560px; margin: 0 auto; padding: 20px 14px 40px; }
+  .local { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); font-weight: 600; }
+  h1 { font-size: 28px; line-height: 1.1; margin: 4px 0 6px; font-weight: 700; }
+  .endereco { color: var(--suave); font-size: 15px; margin: 0 0 14px; }
+  .legenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--suave); margin-bottom: 18px; }
+  .bloco { margin: 14px 0 4px; }
+  .bloco > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+           font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--texto, #222); font-weight: 700;
+           padding: 8px 2px 6px; border-bottom: 1px solid var(--linha); margin-bottom: 10px; }
+  .bloco > summary::-webkit-details-marker { display: none; }
+  .bloco > summary::before { content: ''; border-style: solid; border-width: 5px 0 5px 7px;
+           border-color: transparent transparent transparent currentColor; transition: transform .15s; }
+  .bloco[open] > summary::before { transform: rotate(90deg); }
+  .tema { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+  .tema > summary { display: flex; align-items: center; gap: 8px; padding: 12px 14px;
+                   font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); font-weight: 600; }
+  .tema > summary::before { content: ''; width: 0; height: 0; border-style: solid;
+                           border-width: 5px 0 5px 7px; border-color: transparent transparent transparent currentColor;
+                           transition: transform .15s; flex: none; }
+  .tema[open] > summary::before { transform: rotate(90deg); }
+  .tema[open] > summary { padding-bottom: 8px; }
+  .voltar { display: inline-block; margin-bottom: 10px; color: var(--destaque); text-decoration: none; font-size: 14px; }
+  .tema details { border-top: 1px solid var(--linha); }
+  .tema details summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
+            padding: 11px 14px; align-items: start; }
+  summary { list-style: none; cursor: pointer; }
+  summary::-webkit-details-marker { display: none; }
+  .rotulo { color: var(--suave); font-size: 14px; grid-column: 1 / -1; display: flex; justify-content: space-between; }
+  .valor { font-weight: 600; font-size: 16px; grid-column: 1 / -1; }
+  .valor .par { display: block; margin-top: 0.7em; }
+  .resumo .valor { font-weight: 400; font-size: 15px; line-height: 1.45; color: var(--texto); }
+  .conf { display: inline-flex; gap: 3px; align-items: center; }
+  .conf i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid currentColor; display: inline-block; }
+  .conf i.on { background: currentColor; }
+  .c-alta { color: var(--destaque); } .c-media { color: var(--medio); }
+  .c-baixa, .c-sem { color: var(--alerta); }
+  .detalhe { padding: 0 14px 14px; font-size: 14px; color: var(--suave); }
+  .detalhe p { margin: 0 0 8px; }
+  .detalhe .nota { color: var(--texto); }
+  .detalhe a { color: var(--destaque); word-break: break-word; }
+  .detalhe ul { margin: 0 0 8px; padding-left: 18px; }
+  details[open] summary .valor { color: var(--destaque); }
+  .conflito { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--alerta); }
+  .relogios { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--linha); }
+  .relogio { padding: 10px 8px 12px; min-width: 0; display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "onde onde onde" "an hora cal";
+             align-items: center; column-gap: 5px; row-gap: 6px; }
+  .relogio + .relogio { border-left: 1px solid var(--linha); }
+  .relogio .onde { grid-area: onde; color: var(--suave); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .relogio .gmt { font-size: 11px; font-variant-numeric: tabular-nums; margin-left: 3px; }
+  .relogio .hora { grid-area: hora; font-size: 23px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+  .analogico { grid-area: an; flex: none; }
+  .analogico .face { fill: var(--cartao); stroke: var(--texto); stroke-width: 3; }
+  .analogico .marca, .analogico .ponteiro { stroke: var(--texto); stroke-linecap: round; }
+  .analogico .eixo { fill: var(--destaque); }
+  .analogico.noite .face { fill: var(--texto); }
+  .analogico.noite .marca, .analogico.noite .ponteiro { stroke: var(--cartao); }
+  /* folhinha de arrancar */
+  .folhinha { grid-area: cal; display: flex; flex-direction: column; position: relative; width: 40px; height: 52px; text-align: center; line-height: 1;
+              filter: drop-shadow(0 1px 1px rgba(0,0,0,.18)); padding-top: 3px; }
+  .folhinha .aros { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 0 8px; z-index: 1; }
+  .folhinha .aros i { width: 3px; height: 6px; border-radius: 2px; background: var(--suave); }
+  .folhinha .topo { background: var(--alerta); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: .06em;
+                    text-transform: uppercase; padding: 4px 0 2px; border-radius: 3px 3px 0 0; }
+  .folhinha .folha { flex: 1; display: flex; flex-direction: column; justify-content: center; background: var(--cartao); border: 1px solid var(--linha); border-top: 0; padding: 1px 0 5px;
+                     clip-path: polygon(0 0, 100% 0, 100% 100%, 87.5% calc(100% - 4px), 75% 100%, 62.5% calc(100% - 4px), 50% 100%,
+                       37.5% calc(100% - 4px), 25% 100%, 12.5% calc(100% - 4px), 0 100%); }
+  .folhinha .num { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .folhinha .mes { font-size: 9px; color: var(--suave); text-transform: lowercase; margin-top: 1px; }
+  .grafico { padding: 12px 14px 6px; border-top: 1px solid var(--linha); color: var(--destaque); }
+  .grafico-titulo { color: var(--suave); font-size: 14px; margin-bottom: 4px; }
+  .grafico-nota { color: var(--suave); font-size: 12px; margin-top: 4px; line-height: 1.35; }
+  .referencia { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--linha);
+                color: var(--suave); font-size: 14px; }
+  .referencia .opcoes { display: inline-flex; border: 1px solid var(--destaque); border-radius: 8px; overflow: hidden; }
+  .referencia button { font: inherit; font-weight: 600; padding: 5px 16px; border: 0; background: transparent;
+                       color: var(--destaque); cursor: pointer; }
+  .referencia button[aria-pressed="true"] { background: var(--destaque); color: var(--cartao); }
+  .tema[data-ref="usd"] .ref-brl, .tema[data-ref="brl"] .ref-usd { display: none; }
+  .grafico svg text { fill: var(--suave); }
+  .item-vazio { display: block; padding: 12px 14px; border-top: 1px solid var(--linha); }
+  .item-vazio .rotulo { display: block; color: var(--suave); font-size: 14px; }
+  .item-vazio .valor { display: block; color: var(--suave); font-style: italic; margin-top: 2px; }
+  .vazio-com-fonte summary .valor.vazio-valor { color: var(--suave); font-style: italic; font-weight: 400; }
+  .mapa { border-top: 1px solid var(--linha); padding: 10px 14px 12px; }
+  .mapa-tela { position: relative; border: 1px solid var(--linha); border-radius: 10px; overflow: hidden; background: #dfe9ef; touch-action: none; }
+  .mapa-tela > svg { display: block; width: 100%; height: 340px; cursor: crosshair; }
+  .mapa .terra { fill: #f4f1ea; stroke: #c9c3b6; stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .mapa .linha { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+  .mapa .estrela { pointer-events: none; }
+  .mapa .marca { fill: #fff; stroke: var(--destaque); pointer-events: none; }
+  .mapa .leaflet { height: 380px; }
+  .rotulo-mapa { font: 600 11px/1 Barlow, system-ui, sans-serif; color: #50545b; white-space: nowrap; transform: translate(-50%, -50%);
+                 text-shadow: 0 0 2px #f3f0ea, 0 0 3px #f3f0ea, 0 0 4px #f3f0ea; pointer-events: none; }
+  .rotulo-mapa.cidade { font-size: 13px; color: #33363c; }
+  .rotulo-estacao { font: 600 11px/1 Barlow, system-ui, sans-serif; color: #1d1f22; white-space: nowrap; pointer-events: none;
+                    transform: translate(8px, -50%); text-shadow: 0 0 2px #fff, 0 0 3px #fff, 0 0 4px #fff; }
+  @media (prefers-color-scheme: dark) { .rotulo-estacao { color: #ecebe8; text-shadow: 0 0 2px #000, 0 0 3px #000, 0 0 4px #000; } }
+  @media (prefers-color-scheme: dark) { .rotulo-mapa, .rotulo-mapa.cidade { color: #c9cbd0; text-shadow: 0 0 2px #212327, 0 0 3px #212327, 0 0 4px #212327; } }
+  .mapa .estrela-ll { font-size: 26px; line-height: 26px; text-align: center; color: #1d1f22; text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
+  .mapa-zoom { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .mapa-zoom button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); font: 600 18px Barlow, sans-serif; }
+  .mapa-dica { font-size: 12px; color: var(--suave); margin-top: 6px; }
+  .mapa-horario { display: flex; gap: 6px; margin-top: 10px; }
+  .mapa-horario button { flex: 1; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--linha); background: var(--cartao); color: var(--suave); font: 500 14px Barlow, sans-serif; }
+  .mapa-horario button.ativo { background: var(--destaque); border-color: var(--destaque); color: #fff; }
+  .mapa-info { margin-top: 10px; font-size: 15px; }
+  .mapa-info .nome { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .mi-linha { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px dotted var(--linha); }
+  .mi-rot { color: var(--suave); white-space: nowrap; }
+  .mi-val { text-align: right; }
+  .mi-sub { margin-top: 10px; font-weight: 600; }
+  .mi-fonte { font-size: 12px; color: var(--suave); margin-top: 4px; }
+  .mi-aviso { color: var(--suave); }
+  .mi-link { display: inline-block; margin-top: 10px; }
+  .valor a { color: inherit; }
+  .mapa-info a { color: var(--destaque); }
+  footer { font-size: 13px; color: var(--suave); margin-top: 20px; }
+</style>
+<link rel="stylesheet" href="../comum/leaflet.css">
+<script src="../comum/leaflet.js"></script>
+</head>
+<body>
+<main id="app"><a class="voltar" href="../index.html">← Postos</a></main>
+<script id="dados" type="application/json">{"posto": "Vice-Consulado em Concepción", "endereco": "Avenida Presidente Franco, 972 Centro Concepción, Paraguai", "cidade": "Concepción", "fuso_iana": "America/Asuncion", "fuso_base_min": 0, "pais": "Paraguai", "coleta_mais_recente": "2026-11-27", "temas": [{"tema": "fuso", "rotulo": "Fuso horário", "icone": "🕐", "bloco": "Essencial", "itens": [{"link": "", "variavel": "diferenca_brasilia", "rotulo": "Diferença para Brasília", "ordem": 1, "valor": "0 h", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Base de fusos horários IANA (tz database)", "url": "https://www.iana.org/time-zones", "tipo": "oficial"}]}, {"link": "", "variavel": "horario_verao", "rotulo": "Horário de verão", "ordem": 2, "valor": "Não tem", "unidade": "", "nota": "Ciclo em curso ou o próximo. Ajuste somado à diferença acima. Datas futuras são projeções da regra vigente na base IANA e podem mudar se o país alterar a lei. Calculado pela base de fusos IANA (America/Asuncion) para os 12 meses a partir de 25/11/2026.", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Base de fusos horários IANA (tz database)", "url": "https://www.iana.org/time-zones", "tipo": "oficial"}]}]}, {"tema": "clima", "rotulo": "Clima", "icone": "🌦️", "bloco": "Essencial", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "Verão muito quente, com máximas perto de 35 °C em janeiro, e inverno ameno, com mínimas perto de 13 °C em julho. A chuva se concentra de outubro a abril. A duração do dia muda pouco: de 10h41 em junho a 13h35 em dezembro. O sol aparece em média 5,0 h por dia em agosto e 7,6 h em fevereiro.", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Normais climatológicas (Concepción), tabela da Wikipédia em inglês", "url": "https://en.wikipedia.org/wiki/Concepción,_Paraguay", "tipo": "secundária"}, {"titulo": "Cálculo da posição do Sol (algoritmo da NOAA) a partir das coordenadas do posto", "url": "https://gml.noaa.gov/grad/solcalc/calcdetails.html", "tipo": "oficial"}]}, {"link": "", "variavel": "verao", "rotulo": "Verão (mês mais quente)", "ordem": 1, "valor": "mín 23,3 °C · máx 34,6 °C (janeiro)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Normais climatológicas (Concepción), tabela da Wikipédia em inglês", "url": "https://en.wikipedia.org/wiki/Concepción,_Paraguay", "tipo": "secundária"}]}, {"link": "", "variavel": "inverno", "rotulo": "Inverno (mês mais frio)", "ordem": 2, "valor": "mín 13,2 °C · máx 25,6 °C (julho)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Normais climatológicas (Concepción), tabela da Wikipédia em inglês", "url": "https://en.wikipedia.org/wiki/Concepción,_Paraguay", "tipo": "secundária"}]}, {"link": "", "variavel": "chuva", "rotulo": "Chuva", "ordem": 3, "valor": "1.410 mm por ano · 92 dias de chuva", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Normais climatológicas (Concepción), tabela da Wikipédia em inglês", "url": "https://en.wikipedia.org/wiki/Concepción,_Paraguay", "tipo": "secundária"}]}]}, {"tema": "cambio", "rotulo": "Câmbio", "icone": "💱", "bloco": "Essencial", "itens": [{"link": "", "variavel": "moeda", "rotulo": "Moeda", "ordem": 1, "valor": "Guarani paraguaio (PYG)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-24", "nivel": "pais", "fontes": [{"titulo": "Unicode CLDR (Common Locale Data Repository), nomes de moedas em português", "url": "https://cldr.unicode.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "cotacao", "rotulo": "Cotação", "ordem": 2, "valor": "PYG 1.000 = USD 0,156", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-24", "nivel": "pais", "fontes": [{"titulo": "Banco Central do Brasil - taxas de câmbio de fechamento, todas as moedas (arquivo diário)", "url": "https://www4.bcb.gov.br/Download/fechamento/", "tipo": "oficial"}]}, {"link": "", "variavel": "cotacao_brl", "rotulo": "Cotação", "ordem": 2, "valor": "PYG 1.000 = BRL 0,912", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-24", "nivel": "pais", "fontes": [{"titulo": "Banco Central do Brasil - taxas de câmbio de fechamento, todas as moedas (arquivo diário)", "url": "https://www4.bcb.gov.br/Download/fechamento/", "tipo": "oficial"}]}]}, {"tema": "custo_vida", "rotulo": "Custo de vida", "icone": "🛒", "bloco": "Essencial", "itens": [{"link": "", "variavel": "indice", "rotulo": "Nível geral de preços", "ordem": 1, "valor": "0,8 vez o nível do Brasil (2025)", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial - nível de preços do consumo das famílias (WDI, PA.NUS.PRVT.PLI)", "url": "https://data.worldbank.org/indicator/PA.NUS.PRVT.PLI", "tipo": "oficial"}]}, {"link": "", "variavel": "supermercado", "rotulo": "Supermercado", "ordem": 2, "valor": "1,0 vez o nível do Brasil (2021)", "unidade": "", "nota": "", "confianca": "alta", "data": "2021", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial - Programa de Comparação Internacional (ICP 2021), nível de preços por categoria", "url": "https://www.worldbank.org/en/programs/icp", "tipo": "oficial"}]}, {"link": "", "variavel": "restaurante", "rotulo": "Restaurantes e hotéis", "ordem": 3, "valor": "1,0 vez o nível do Brasil (2021)", "unidade": "", "nota": "", "confianca": "alta", "data": "2021", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial - Programa de Comparação Internacional (ICP 2021), nível de preços por categoria", "url": "https://www.worldbank.org/en/programs/icp", "tipo": "oficial"}]}, {"variavel": "big_mac", "rotulo": "Big Mac", "ordem": 4, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "The Economist - índice Big Mac (dados CC BY 4.0)", "url": "https://github.com/TheEconomist/big-mac-data", "tipo": "imprensa"}], "vazio": true}, {"link": "https://www.numbeo.com/cost-of-living/in/Concepcion?displayCurrency=USD", "variavel": "numbeo", "rotulo": "Numbeo", "ordem": 9, "valor": "Ver preços informados por usuários →", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "cidade", "fontes": [{"titulo": "Numbeo - preços informados por usuários", "url": "https://www.numbeo.com/cost-of-living/", "tipo": "colaborativa"}]}]}, {"tema": "presenca", "rotulo": "Presença brasileira", "icone": "🇧🇷", "bloco": "Essencial", "itens": [{"link": "", "variavel": "comunidade", "rotulo": "Comunidade brasileira estimada", "ordem": 1, "valor": "8.200 na jurisdição do posto (ano-base 2023)", "unidade": "", "nota": "", "confianca": "media", "data": "2023", "nivel": "posto", "fontes": [{"titulo": "MRE - Comunidades brasileiras no exterior (estimativas das repartições, ano a ano)", "url": "https://www.gov.br/mre/pt-br/assuntos/portal-consular/arquivos/brasileiros-no-exterior-estimativas-ano-a-ano", "tipo": "oficial"}]}, {"link": "", "variavel": "eleitores", "rotulo": "Eleitores aptos", "ordem": 2, "valor": "77 (nov/2026)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-04", "nivel": "posto", "fontes": [{"titulo": "Tribunal Superior Eleitoral - Eleitorado por local de votação (atual), seções no exterior", "url": "https://dadosabertos.tse.jus.br/dataset/eleitorado-atual", "tipo": "oficial"}]}]}, {"tema": "moradia", "rotulo": "Moradia", "icone": "🏠", "bloco": "Essencial", "itens": []}, {"tema": "transporte", "rotulo": "Transporte", "icone": "🚇", "bloco": "Essencial", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "Morando a 5 km do posto, o trajeto leva cerca de 10 min de carro sem trânsito. A 10 km, 20 min de carro sem trânsito. Não há medição de trânsito para a cidade.", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-25", "nivel": "posto", "fontes": [{"titulo": "OSRM sobre OpenStreetMap - tempo de rota de carro sem trânsito", "url": "https://project-osrm.org/", "tipo": "oficial"}]}, {"variavel": "tarifa", "rotulo": "Passagem (adulto)", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "seguranca", "rotulo": "Segurança", "icone": "🛡️", "bloco": "Essencial", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "O país não está em guerra nem em conflito armado envolvendo um Estado. A até 100 km do posto, não houve episódio de violência armada com mortos de nov/2025 a out/2026. No país, a taxa de homicídios é de 6,8 por 100 mil habitantes em 2023 (Brasil: 19,3). As mortes no trânsito no país somam 22,0 por 100 mil habitantes em 2019 (Brasil: 16,0). Em estabilidade política e ausência de violência, o país ocupa a 105.ª posição entre 208 no índice do Banco Mundial (Brasil: 144.ª).", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-26", "nivel": "cidade", "fontes": [{"titulo": "UCDP - Uppsala Conflict Data Program (Universidade de Uppsala), eventos georreferenciados de violência armada com mortos (GED e candidate)", "url": "https://ucdp.uu.se/downloads/", "tipo": "especializada"}, {"titulo": "Banco Mundial (WDI) - homicídios intencionais por 100 mil habitantes (dado do UNODC), por país", "url": "https://data.worldbank.org/indicator/VC.IHR.PSRC.P5", "tipo": "oficial"}, {"titulo": "Banco Mundial (WDI) - mortes no trânsito por 100 mil habitantes", "url": "https://data.worldbank.org/indicator/SH.STA.TRAF.P5", "tipo": "oficial"}, {"titulo": "Banco Mundial - Worldwide Governance Indicators: estabilidade política e ausência de violência", "url": "https://www.worldbank.org/en/publication/worldwide-governance-indicators", "tipo": "oficial"}]}, {"link": "", "variavel": "conflito_pais", "rotulo": "Guerra ou conflito armado no país (12 meses)", "ordem": 1, "valor": "Nem guerra nem conflito armado envolvendo um Estado; Período: nov/2025 a out/2026", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-10", "nivel": "pais", "fontes": [{"titulo": "UCDP - Uppsala Conflict Data Program (Universidade de Uppsala), eventos georreferenciados de violência armada com mortos (GED e candidate)", "url": "https://ucdp.uu.se/downloads/", "tipo": "especializada"}]}, {"link": "", "variavel": "conflito", "rotulo": "Violência armada perto do posto (12 meses)", "ordem": 2, "valor": "Nenhum episódio com mortos a até 100 km; Período: nov/2025 a out/2026", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-10", "nivel": "cidade", "fontes": [{"titulo": "UCDP - Uppsala Conflict Data Program (Universidade de Uppsala), eventos georreferenciados de violência armada com mortos (GED e candidate)", "url": "https://ucdp.uu.se/downloads/", "tipo": "especializada"}]}, {"variavel": "homicidios", "rotulo": "Homicídios (cidade)", "ordem": 3, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"link": "", "variavel": "homicidios_pais", "rotulo": "Homicídios (país)", "ordem": 4, "valor": "6,8 por 100 mil habitantes (2023)", "unidade": "", "nota": "", "confianca": "alta", "data": "2023", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - homicídios intencionais por 100 mil habitantes (dado do UNODC), por país", "url": "https://data.worldbank.org/indicator/VC.IHR.PSRC.P5", "tipo": "oficial"}]}, {"link": "", "variavel": "transito", "rotulo": "Mortes no trânsito (país)", "ordem": 5, "valor": "22,0 mortes por 100 mil habitantes (2019)", "unidade": "", "nota": "", "confianca": "alta", "data": "2019", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - mortes no trânsito por 100 mil habitantes", "url": "https://data.worldbank.org/indicator/SH.STA.TRAF.P5", "tipo": "oficial"}]}, {"link": "", "variavel": "estabilidade", "rotulo": "Estabilidade política e ausência de violência (país)", "ordem": 6, "valor": "105.º de 208 países em 2025 (1.º = mais estável)", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial - Worldwide Governance Indicators: estabilidade política e ausência de violência", "url": "https://www.worldbank.org/en/publication/worldwide-governance-indicators", "tipo": "oficial"}]}, {"link": "", "variavel": "riscos_naturais", "rotulo": "Riscos naturais (país)", "ordem": 7, "valor": "Sem risco muito alto de terremoto, tsunami ou ciclone tropical", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-26", "nivel": "pais", "fontes": [{"titulo": "INFORM Risk - Joint Research Centre da Comissão Europeia, exposição a terremoto, tsunami e ciclone tropical (0 a 10)", "url": "https://drmkc.jrc.ec.europa.eu/inform-index", "tipo": "oficial"}]}]}, {"tema": "saude", "rotulo": "Saúde", "icone": "🏥", "bloco": "Essencial", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "O gasto com saúde no país é de USD 527 por pessoa por ano em 2023: USD 293 vêm do governo, USD 191 são pagos diretamente pelas famílias e USD 43 vêm de planos de saúde e outros gastos privados. No índice de cobertura de serviços essenciais de saúde da OMS, o país tem 79 pontos de 100 em 2023.\n\nPara referência, no Brasil são USD 1.010 por pessoa (2023): USD 446 vêm do governo, USD 265 são pagos diretamente pelas famílias e USD 299 vêm de planos de saúde e outros gastos privados. No índice da OMS, o Brasil tem 84 pontos.\n\nHá 3,9 médicos por mil habitantes (Brasil: 2,4). No último ano, a média de partículas finas no ar (PM2,5) na cidade foi de 7 µg/m³ (Brasília: 7), com o nível mais alto em setembro.", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "OMS - índice de cobertura de serviços essenciais de saúde (UHC, 0 a 100), Global Health Observatory", "url": "https://www.who.int/data/gho/data/indicators/indicator-details/GHO/uhc-index-of-service-coverage", "tipo": "oficial"}, {"titulo": "Banco Mundial (WDI) - gasto com saúde por pessoa e suas partes (governo, famílias, planos e outros privados, ajuda externa) e médicos por mil habitantes", "url": "https://data.worldbank.org/topic/health", "tipo": "oficial"}, {"titulo": "Copernicus (CAMS), partículas finas PM2,5 - via API de qualidade do ar da Open-Meteo", "url": "https://open-meteo.com/en/docs/air-quality-api", "tipo": "oficial"}]}, {"link": "", "variavel": "emergencia", "rotulo": "Emergência", "ordem": 1, "valor": "911", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikidata - mão de direção (P1622) e telefones de emergência (P2852) por país, consultados por script", "url": "https://query.wikidata.org/", "tipo": "colaborativa"}]}, {"variavel": "sistema_publico", "rotulo": "Sistema público para o servidor", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"link": "https://www.dinavisa.gov.py", "variavel": "medicamentos", "rotulo": "Medicamentos: registro oficial do país", "ordem": 3, "valor": "Órgão regulador: Dirección Nacional de Vigilancia Sanitaria (DINAVISA)", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Sites oficiais dos órgãos reguladores de medicamentos de cada país (lista digitada em 27/11/2026, endereços conferidos por script)", "url": "", "tipo": "oficial"}]}, {"link": "", "variavel": "gasto", "rotulo": "Gasto com saúde (país)", "ordem": 4, "valor": "USD 527 por pessoa por ano (2023); Governo: USD 293; Pago diretamente pelas famílias: USD 191; Planos de saúde e outros privados: USD 43", "unidade": "", "nota": "", "confianca": "alta", "data": "2023", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - gasto com saúde por pessoa e suas partes (governo, famílias, planos e outros privados, ajuda externa) e médicos por mil habitantes", "url": "https://data.worldbank.org/topic/health", "tipo": "oficial"}]}, {"link": "", "variavel": "cobertura", "rotulo": "Cobertura de serviços essenciais de saúde (país; OMS)", "ordem": 5, "valor": "79 de 100 (2023)", "unidade": "", "nota": "", "confianca": "alta", "data": "2023", "nivel": "pais", "fontes": [{"titulo": "OMS - índice de cobertura de serviços essenciais de saúde (UHC, 0 a 100), Global Health Observatory", "url": "https://www.who.int/data/gho/data/indicators/indicator-details/GHO/uhc-index-of-service-coverage", "tipo": "oficial"}]}, {"link": "", "variavel": "medicos", "rotulo": "Médicos (país)", "ordem": 6, "valor": "3,9 por mil habitantes (2022)", "unidade": "", "nota": "", "confianca": "alta", "data": "2022", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - gasto com saúde por pessoa e suas partes (governo, famílias, planos e outros privados, ajuda externa) e médicos por mil habitantes", "url": "https://data.worldbank.org/topic/health", "tipo": "oficial"}]}, {"link": "", "variavel": "ar", "rotulo": "Qualidade do ar", "ordem": 7, "valor": "PM2,5: média de 7 µg/m³ nos últimos 12 meses; Mês mais poluído: setembro (8 µg/m³)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Copernicus (CAMS), partículas finas PM2,5 - via API de qualidade do ar da Open-Meteo", "url": "https://open-meteo.com/en/docs/air-quality-api", "tipo": "oficial"}]}]}, {"tema": "voo", "rotulo": "Voo para o Brasil", "icone": "✈️", "bloco": "Essencial", "itens": [{"variavel": "direto_brasil", "rotulo": "Voo direto para o Brasil", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "ANAC - Voo Regular Ativo (VRA), arquivos mensais", "url": "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/", "tipo": "oficial"}], "vazio": true}, {"variavel": "brasilia", "rotulo": "Ligações a partir de Brasília", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "ANAC - Voo Regular Ativo (VRA), arquivos mensais", "url": "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/", "tipo": "oficial"}], "vazio": true}]}, {"tema": "idioma", "rotulo": "Idioma e religião", "icone": "🗣️", "bloco": "Rotina", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "Os idiomas oficiais são espanhol e guarani. A maior religião é o cristianismo (95,5%), segundo dados de 2020.", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo da página de cada país (idiomas e religião, com o ano e a fonte citados lá), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "idioma", "rotulo": "Idioma", "ordem": 1, "valor": "espanhol e guarani (oficiais)", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo da página de cada país (idiomas e religião, com o ano e a fonte citados lá), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "religiao", "rotulo": "Religião e cultos", "ordem": 2, "valor": "cristianismo: 95,5% (católicos 87,4%, outros cristãos 8,1%); sem religião: 4,1%; outras: 0,4%; dados de 2020", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo da página de cada país (idiomas e religião, com o ano e a fonte citados lá), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}]}, {"tema": "servicos", "rotulo": "Serviços", "icone": "🔌", "bloco": "Rotina", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "100% da população tem acesso à rede elétrica (2024) e 64% têm água potável segura (2024). Para referência, no Brasil são 100% com rede elétrica e 89% com água potável segura. A tensão é de 220 V: aparelhos de 220 V funcionam normalmente. Tomadas tipo C: plugues brasileiros finos de dois pinos costumam encaixar no tipo C. 82% da população usa internet.", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Banco Mundial (WDI) - acesso a eletricidade (EG.ELC.ACCS.ZS), água potável gerenciada de forma segura (SH.H2O.SMDW.ZS) e usuários de internet (IT.NET.USER.ZS)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "eletricidade", "rotulo": "Eletricidade", "ordem": 1, "valor": "220 V; tomadas tipo C: plugues brasileiros finos de dois pinos costumam encaixar no tipo C", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikidata - tensão (P2884) e tipos de tomada (P2853) por país, consultados por script", "url": "https://query.wikidata.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "internet_movel", "rotulo": "Internet móvel", "ordem": 2, "valor": "USD 6,95 por mês, plano mais barato com 5 GB de dados móveis (2025)", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "União Internacional de Telecomunicações (UIT) - ICT Price Baskets", "url": "https://www.itu.int/en/ITU-D/Statistics/Pages/ICTprices/default.aspx", "tipo": "oficial"}]}, {"link": "", "variavel": "internet", "rotulo": "Internet fixa", "ordem": 3, "valor": "USD 18,94 por mês, plano mais barato com banda larga fixa (5 GB) (2025)", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "União Internacional de Telecomunicações (UIT) - ICT Price Baskets", "url": "https://www.itu.int/en/ITU-D/Statistics/Pages/ICTprices/default.aspx", "tipo": "oficial"}]}, {"link": "", "variavel": "acesso_eletricidade", "rotulo": "Acesso a eletricidade", "ordem": 5, "valor": "100% da população com eletricidade (2024)", "unidade": "", "nota": "", "confianca": "alta", "data": "2024", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - acesso a eletricidade (EG.ELC.ACCS.ZS), água potável gerenciada de forma segura (SH.H2O.SMDW.ZS) e usuários de internet (IT.NET.USER.ZS)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "agua", "rotulo": "Água potável segura", "ordem": 6, "valor": "64% da população com água potável segura (2024)", "unidade": "", "nota": "", "confianca": "alta", "data": "2024", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - acesso a eletricidade (EG.ELC.ACCS.ZS), água potável gerenciada de forma segura (SH.H2O.SMDW.ZS) e usuários de internet (IT.NET.USER.ZS)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "internet_uso", "rotulo": "Uso de internet", "ordem": 7, "valor": "82% da população usa internet (2024)", "unidade": "", "nota": "", "confianca": "alta", "data": "2024", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - acesso a eletricidade (EG.ELC.ACCS.ZS), água potável gerenciada de forma segura (SH.H2O.SMDW.ZS) e usuários de internet (IT.NET.USER.ZS)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "https://en.wikipedia.org/wiki/AC_power_plugs_and_sockets", "variavel": "tomadas_ref", "rotulo": "Tipos de tomada (imagens)", "ordem": 9, "valor": "Ver os tipos de tomada, com imagens →", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - AC power plugs and sockets (tipos de tomada, com imagens)", "url": "https://en.wikipedia.org/wiki/AC_power_plugs_and_sockets", "tipo": "colaborativa"}]}]}, {"tema": "pagamentos", "rotulo": "Bancos e pagamentos", "icone": "💳", "bloco": "Rotina", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "61% dos adultos têm conta em banco ou carteira digital (2024), contra 86% no Brasil. A inflação foi de 4,0% em 2025.", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Banco Mundial (WDI) - adultos com conta em banco ou carteira digital (Global Findex, FX.OWN.TOTL.ZS) e inflação ao consumidor (FP.CPI.TOTL.ZG)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"variavel": "instantaneo", "rotulo": "Transferência instantânea", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "cartao", "rotulo": "Cartão", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"link": "", "variavel": "conta", "rotulo": "Conta em banco ou carteira digital", "ordem": 3, "valor": "61% dos adultos (2024)", "unidade": "", "nota": "", "confianca": "alta", "data": "2024", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - adultos com conta em banco ou carteira digital (Global Findex, FX.OWN.TOTL.ZS) e inflação ao consumidor (FP.CPI.TOTL.ZG)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "inflacao", "rotulo": "Inflação", "ordem": 4, "valor": "4,0% em 2025", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "Banco Mundial (WDI) - adultos com conta em banco ou carteira digital (Global Findex, FX.OWN.TOTL.ZS) e inflação ao consumidor (FP.CPI.TOTL.ZG)", "url": "https://data.worldbank.org/", "tipo": "oficial"}]}]}, {"tema": "feriados", "rotulo": "Feriados", "icone": "📅", "bloco": "Rotina", "itens": [{"link": "", "variavel": "dias_uteis", "rotulo": "Feriados em dias úteis (próximos 12 meses)", "ordem": 1, "valor": "9", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Biblioteca holidays (feriados oficiais por país e região)", "url": "https://pypi.org/project/holidays/", "tipo": "oficial"}]}, {"link": "", "variavel": "lista", "rotulo": "Próximos feriados", "ordem": 2, "valor": "08/dez (ter) Caacupe Virgin Day; 25/dez (sex) Christmas Day; 01/jan (sex) New Year's Day; 01/mar (seg) Patriots Day; 25/mar (qui) Maundy Thursday; 26/mar (sex) Good Friday; 14/mai (sex) National Holiday; 07/set (ter) Independência do Brasil; 29/set (qua) Boqueron Battle Day", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Biblioteca holidays (feriados oficiais por país e região)", "url": "https://pypi.org/project/holidays/", "tipo": "oficial"}]}]}, {"tema": "vida_oficial", "rotulo": "Missões estrangeiras", "icone": "🤝", "bloco": "Rotina", "itens": [{"link": "", "variavel": "corpo_diplomatico", "rotulo": "Missões estrangeiras na cidade", "ordem": 1, "valor": "nenhuma embaixada ou consulado de carreira de outro país na cidade", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Wikipédia em inglês - List of diplomatic missions in <país> (missões residentes na cidade), contadas por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}]}, {"tema": "ensino", "rotulo": "Ensino", "icone": "🏫", "bloco": "Situações específicas", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "O ano letivo escolar começa no primeiro semestre (no Brasil, no primeiro semestre).", "unidade": "", "nota": "", "confianca": "alta", "data": "", "nivel": "cidade", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "ano_letivo", "rotulo": "Ano letivo escolar", "ordem": 1, "valor": "começa no primeiro semestre", "unidade": "", "nota": "", "confianca": "alta", "data": "2026", "nivel": "pais", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "ano_universitario", "rotulo": "Ano letivo universitário", "ordem": 2, "valor": "começa no primeiro semestre", "unidade": "", "nota": "", "confianca": "alta", "data": "2022", "nivel": "pais", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "escola_obrigatoria", "rotulo": "Escolaridade obrigatória", "ordem": 3, "valor": "dos 5 anos, por 13 anos", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"link": "", "variavel": "pre_escola_gratuita", "rotulo": "Pré-escola gratuita", "ordem": 4, "valor": "3 anos garantidos por lei", "unidade": "", "nota": "", "confianca": "alta", "data": "2025", "nivel": "pais", "fontes": [{"titulo": "UNESCO, Instituto de Estatística (UIS) - calendário escolar, escolaridade obrigatória e pré-escola gratuita (API pública)", "url": "https://databrowser.uis.unesco.org/", "tipo": "oficial"}]}, {"variavel": "escolas_internacionais_exemplos", "rotulo": "Escolas internacionais", "ordem": 6, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "escolas_ib_pais", "rotulo": "Escolas IB no país", "ordem": 7, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "taxa_escola_publica", "rotulo": "Taxa na escola pública", "ordem": 8, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "conjuge", "rotulo": "Cônjuge e dependentes", "icone": "👪", "bloco": "Situações específicas", "itens": [{"link": "https://concordia.itamaraty.gov.br/acordo/4290", "variavel": "acordo_trabalho", "rotulo": "Trabalho remunerado de dependentes", "ordem": 1, "valor": "Há acordo bilateral em vigor, assinado em 1996", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Portal Concórdia (MRE, Divisão de Atos Internacionais) - acordos bilaterais sobre exercício de atividade remunerada por dependentes, situação de vigência", "url": "https://concordia.itamaraty.gov.br/", "tipo": "oficial"}]}]}, {"tema": "vistos_nao_dependentes", "rotulo": "Vistos para não dependentes", "icone": "🛂", "bloco": "Situações específicas", "itens": [{"link": "", "variavel": "turismo_brasileiros", "rotulo": "Visita (turista)", "ordem": 1, "valor": "sem visto (livre circulação, basta a carteira de identidade)", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - Visa requirements for Brazilian citizens (que cita o Timatic, da IATA), coletado por script", "url": "https://en.wikipedia.org/wiki/Visa_requirements_for_Brazilian_citizens", "tipo": "colaborativa"}]}, {"variavel": "residencia_longa_brasileiros", "rotulo": "Residência de longo prazo", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "empregados", "rotulo": "Empregados domésticos", "icone": "🧹", "bloco": "Situações específicas", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "O salário mínimo equivale a USD 370 por mês, próximo do brasileiro (USD 262), em valores de dez/2024.", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-25", "nivel": "cidade", "fontes": [{"titulo": "Organização Internacional do Trabalho (OIT) - ILOSTAT, salário mínimo mensal (EAR_INEE_CUR_NB_A)", "url": "https://ilostat.ilo.org/topics/wages/", "tipo": "oficial"}]}, {"link": "", "variavel": "salario_minimo", "rotulo": "Salário mínimo", "ordem": 1, "valor": "USD 370 por mês (PYG 2.798.309), vigente em dez/2024", "unidade": "", "nota": "", "confianca": "alta", "data": "2024-12", "nivel": "pais", "fontes": [{"titulo": "Organização Internacional do Trabalho (OIT) - ILOSTAT, salário mínimo mensal (EAR_INEE_CUR_NB_A)", "url": "https://ilostat.ilo.org/topics/wages/", "tipo": "oficial"}]}, {"variavel": "contratacao", "rotulo": "Regras para contratar", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "custo", "rotulo": "Custo típico", "ordem": 3, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "automoveis", "rotulo": "Automóveis", "icone": "🚗", "bloco": "Situações específicas", "itens": [{"variavel": "carteira", "rotulo": "Carteira de motorista", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "importacao", "rotulo": "Carro com isenção de impostos", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"link": "", "variavel": "mao", "rotulo": "Mão de direção", "ordem": 3, "valor": "direita", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikidata - mão de direção (P1622) e telefones de emergência (P2852) por país, consultados por script", "url": "https://query.wikidata.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "convencao_transito", "rotulo": "Convenções de trânsito da ONU", "ordem": 4, "valor": "Parte da Convenção de Genebra sobre Trânsito Rodoviário (1949) desde 1965, mas não da Convenção de Viena sobre Trânsito Viário (1968). O Brasil é parte só da de Viena", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Nações Unidas - UN Treaty Collection, Convenção sobre Trânsito Rodoviário (Genebra, 1949), situação dos participantes (XI-B-1)", "url": "https://treaties.un.org/Pages/ViewDetailsV.aspx?src=TREATY&mtdsg_no=XI-B-1&chapter=11&Temp=mtdsg5&clang=_en", "tipo": "oficial"}, {"titulo": "Nações Unidas - UN Treaty Collection, Convenção sobre Trânsito Viário (Viena, 1968), situação dos participantes (XI-B-19)", "url": "https://treaties.un.org/Pages/ViewDetailsIII.aspx?src=TREATY&mtdsg_no=XI-B-19&chapter=11&Temp=mtdsg3&clang=_en", "tipo": "oficial"}]}]}, {"tema": "animais", "rotulo": "Animais de estimação", "icone": "🐕", "bloco": "Situações específicas", "itens": [{"link": "https://www.gov.br/agricultura/pt-br/assuntos/vigilancia-agropecuaria/animais-estimacao/sair-do-brasil/mercosul-site-mapa-jul26.pdf", "variavel": "classificacao_brasil", "rotulo": "Saindo do Brasil", "ordem": 0, "valor": "o MAPA publica requisitos próprios para o Mercosul (versão de 07/2026)", "unidade": "", "nota": "", "confianca": "alta", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Ministério da Agricultura e Pecuária (MAPA/Vigiagro) - Sair do Brasil com cães e gatos: requisitos por país de destino e documento dos demais países, coletado por script", "url": "https://www.gov.br/agricultura/pt-br/assuntos/vigilancia-agropecuaria/animais-estimacao/sair-do-brasil", "tipo": "oficial"}]}, {"variavel": "permissao", "rotulo": "Entrada do animal", "ordem": 1, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "quarentena", "rotulo": "Quarentena", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "residencia_previa", "rotulo": "Residência prévia exigida", "ordem": 2, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "identificacao", "rotulo": "Identificação", "ordem": 3, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "vacina_antirrabica", "rotulo": "Vacina antirrábica", "ordem": 4, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "antiparasitario", "rotulo": "Antiparasitário", "ordem": 5, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "sorologia_antirrabica", "rotulo": "Sorologia antirrábica", "ordem": 5, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [{"titulo": "Ministério da Agricultura e Pecuária (MAPA/Vigiagro) - Sair do Brasil com cães e gatos: requisitos por país de destino e documento dos demais países, coletado por script", "url": "https://www.gov.br/agricultura/pt-br/assuntos/vigilancia-agropecuaria/animais-estimacao/sair-do-brasil", "tipo": "oficial"}], "vazio": true}, {"variavel": "certificado", "rotulo": "Certificado", "ordem": 6, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}, {"variavel": "racas_restritas", "rotulo": "Raças restritas", "ordem": 8, "valor": "sem informação", "unidade": "", "nota": "", "confianca": "sem", "data": "", "nivel": "", "fontes": [], "vazio": true}]}, {"tema": "lgbt", "rotulo": "LGBTQIA+", "icone": "🏳️‍🌈", "bloco": "Situações específicas", "itens": [{"link": "", "variavel": "descricao", "rotulo": "Em resumo", "ordem": 0, "valor": "Relações entre pessoas do mesmo sexo não são crime. Não há casamento nem união civil entre pessoas do mesmo sexo.", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "cidade", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "casamento", "rotulo": "Casamento entre pessoas do mesmo sexo", "ordem": 1, "valor": "não há casamento nem união civil entre pessoas do mesmo sexo", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "criminalizacao", "rotulo": "Relações entre pessoas do mesmo sexo", "ordem": 2, "valor": "não criminalizadas (desde 1990)", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "adocao", "rotulo": "Adoção por casais do mesmo sexo", "ordem": 3, "valor": "só por pessoa solteira (não pelo casal)", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "identidade_genero", "rotulo": "Mudança legal de gênero", "ordem": 4, "valor": "mudança legal de gênero não permitida", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}, {"link": "", "variavel": "discriminacao", "rotulo": "Proteção contra discriminação", "ordem": 5, "valor": "proteção por orientação sexual e identidade de gênero (limitada)", "unidade": "", "nota": "", "confianca": "media", "data": "2026-11-27", "nivel": "pais", "fontes": [{"titulo": "Wikipédia em inglês - quadro-resumo das páginas LGBTQ rights in <país> (situação legal e uniões), coletado por script", "url": "https://en.wikipedia.org/", "tipo": "colaborativa"}]}]}], "cambio": {"moeda": "PYG", "serie": [{"rotulo": "2025-11", "valor": 0.142912878879906}, {"rotulo": "2025-11", "valor": 0.1426332087194533}, {"rotulo": "2025-12", "valor": 0.1520870911518772}, {"rotulo": "2026-01", "valor": 0.14911596599559512}, {"rotulo": "2026-02", "valor": 0.15512100989982286}, {"rotulo": "2026-03", "valor": 0.1539171925504079}, {"rotulo": "2026-04", "valor": 0.16222600028551776}, {"rotulo": "2026-05", "valor": 0.1653165812530997}, {"rotulo": "2026-06", "valor": 0.16412330255474333}, {"rotulo": "2026-07", "valor": 0.16722408026755853}, {"rotulo": "2026-08", "valor": 0.16887926652356963}, {"rotulo": "2026-09", "valor": 0.1705550372577479}, {"rotulo": "2026-10", "valor": 0.16863406408094436}, {"rotulo": "2026-11 (hoje)", "valor": 0.155639843177294}], "serie_brl": [{"rotulo": "2025-11", "valor": 0.7712}, {"rotulo": "2025-11", "valor": 0.7646000000000001}, {"rotulo": "2025-12", "valor": 0.8394999999999999}, {"rotulo": "2026-01", "valor": 0.7818}, {"rotulo": "2026-02", "valor": 0.8002}, {"rotulo": "2026-03", "valor": 0.8080999999999999}, {"rotulo": "2026-04", "valor": 0.8130000000000001}, {"rotulo": "2026-05", "valor": 0.8451}, {"rotulo": "2026-06", "valor": 0.8529}, {"rotulo": "2026-07", "valor": 0.8549}, {"rotulo": "2026-08", "valor": 0.876}, {"rotulo": "2026-09", "valor": 0.8875000000000001}, {"rotulo": "2026-10", "valor": 0.9296000000000001}, {"rotulo": "2026-11 (hoje)", "valor": 0.9125}], "escala_usd": 1000, "escala_brl": 1000, "ultimo": "hoje"}, "mapa": {"viewbox": [-1000, -999, 1999, 1999], "proj": {"lat0": -23.40848, "lon0": -57.442888, "kx": 102.15790048439861, "ky": 110.574}, "contorno": "M-764,-645L-719,-587L-675,-551L-608,-514L-543,-462L-513,-420L-472,-335L-384,-229L-309,-194L-219,-168L-124,-115L-116,-117L-100,-60L-104,-42L-120,-21L-121,-7L-102,20L-64,127L18,249L75,312L87,337L89,375L62,434L17,502L8,544L23,686L11,757L19,764L-22,784L-49,834L-55,855L-49,878L-73,972L-84,996L24,1000L123,992L243,970L377,926L471,882L556,831L634,773L707,707L773,634L832,555L882,471L930,367L970,243L995,98L1000,-25L986,-169L970,-243L942,-337L914,-405L870,-493L818,-576L773,-634L707,-707L634,-773L576,-818L493,-870L405,-914L314,-949L243,-970L147,-989L49,-999L-31,-999L-171,-985L-314,-950L-428,-904L-553,-833L-672,-741L-764,-645ZM210,798L211,804L205,806L183,793L182,787L193,785L210,798ZM125,206L126,189L132,190L133,206L125,206ZM-311,-261L-330,-272L-330,-281L-312,-278L-286,-246L-273,-241L-257,-246L-211,-229L-165,-195L-140,-144L-147,-143L-170,-162L-181,-181L-200,-194L-217,-216L-232,-224L-290,-232L-311,-261ZM9,305L33,408L33,452L73,380L75,363L63,340L13,287L9,305ZM-459,-215L-445,-190L-412,-154L-405,-161L-405,-172L-422,-192L-459,-215ZM-396,-180L-396,-163L-403,-161L-400,-139L-322,-13L-310,32L-320,100L-313,119L-268,146L-200,171L-177,193L-171,213L-175,238L-191,265L-192,284L-115,355L-95,379L-64,435L-49,521L-35,531L-26,529L-10,484L-2,483L8,449L5,428L-6,399L-14,398L-23,352L-70,241L-91,214L-87,207L-114,142L-129,127L-146,120L-151,107L-155,84L-140,-7L-159,-34L-262,-96L-262,-104L-284,-125L-309,-139L-303,-128L-310,-124L-337,-140L-339,-153L-362,-169L-396,-180ZM-357,-154L-350,-157L-346,-148L-355,-147L-357,-154ZM-89,698L-79,740L-60,697L-50,695L-46,699L-53,726L-31,680L-29,644L-36,647L-40,642L-31,605L-30,548L-50,536L-57,548L-88,677L-89,698ZM-992,122L-972,236L-933,360L-870,493L-788,615L-690,724L-596,803L-471,882L-337,942L-171,985L-104,845L-89,758L-103,710L-103,679L-100,642L-77,555L-73,522L-77,510L-72,506L-86,435L-105,405L-131,380L-173,321L-194,305L-211,283L-211,263L-197,248L-191,232L-191,215L-198,196L-211,187L-314,147L-338,124L-343,101L-331,34L-339,3L-444,-166L-568,-319L-627,-377L-651,-410L-646,-417L-658,-421L-665,-439L-694,-460L-750,-467L-790,-490L-819,-527L-833,-554L-904,-427L-957,-290L-989,-147L-997,-74L-1000,16L-992,122ZM-526,-111L-491,-75L-492,-68L-518,-63L-538,-88L-538,-107L-526,-111ZM-263,-126L-259,-116L-204,-73L-154,-57L-164,-73L-202,-105L-229,-119L-263,-126ZM-512,-284L-497,-261L-470,-234L-493,-270L-512,-284ZM-799,-577L-794,-533L-775,-507L-741,-486L-679,-475L-658,-464L-631,-440L-577,-363L-554,-343L-548,-350L-542,-349L-540,-337L-503,-297L-529,-350L-543,-365L-586,-432L-622,-467L-752,-543L-799,-577Z", "linhas": [], "posto_nome": "Vice-Consulado", "grade": {"x0": -1000, "y0": -999, "passo": 50, "cols": 40, "rows": 40, "t": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0, 0, -1, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1], "a": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 6, 6, 6, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 6, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, -1, 0, 0, 0, -1, 0, -1, -1, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, -1, -1, 0, 0, 0, 0, 0, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, -1, 0, 0, 0, 0, 6, 6, 6, 6, 7, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, -1, 0, 0, 0, 6, 6, 6, 7, 7, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, -1, 0, 0, 0, 6, 6, 7, 7, 7, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, 0, 3, 3, 3, 7, 7, 11, 11, 11, 11, 11, 11, 9, 9, 9, 9, 9, 9, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, -1, 0, 0, 3, 3, 3, 3, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, -1, 4, 4, 2, 2, 2, 2, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 2, 2, 2, 10, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, -1, 4, 4, 4, -1, 4, 1, 1, 2, 10, 10, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, -1, 1, 1, 1, -1, -1, 1, 1, 8, 10, 10, 10, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, 1, 8, 8, 8, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, -1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, 8, 8, 5, 5, 5, 5, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 9, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 8, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 8, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 9, 9, 9, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 8, -1, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 8, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 8, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 8, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, -1, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 5, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 5, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 5, -1, -1, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 5, -1, -1, 5, 5, 5, 5, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1], "e": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1], "w": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "c": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 20, 20, 20, 20, 20, 20, 19, 18, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 44, 42, 41, 41, 40, 20, 20, 20, 20, 20, 19, 18, 15, 15, 24, 24, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 46, 44, 44, 42, 41, 40, 34, 34, 20, 20, 20, 20, 15, 15, 15, 14, 21, 21, 22, 13, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 47, 47, 44, 44, 42, 41, 39, 34, 31, 23, 16, 16, 16, 15, 14, 13, 14, 18, 19, 19, 13, 13, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 47, 47, 47, 47, 45, 44, 41, 40, 34, 34, 30, 23, 22, 16, 16, 16, 15, 14, 13, 15, 14, 15, 15, 11, 12, 12, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 48, 47, 47, 47, 47, 46, 43, 41, 38, 34, 32, 25, 23, 22, 15, 15, 15, 16, 16, 12, 13, 14, 15, 14, 11, 10, 9, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 49, 49, 49, 49, 49, 49, 49, 43, 39, 37, 34, 31, 25, 23, 21, 19, 14, 14, 14, 11, 11, 11, 12, 14, 12, 12, 11, 9, 8, 10, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 49, 49, 50, 50, 50, 51, 52, 52, 38, 35, 32, 29, 26, 23, 21, 18, 16, 14, 13, 12, 10, 10, 12, 13, 11, 12, 9, 7, 9, 10, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 50, 50, 50, 52, 52, 52, 52, 36, 35, 29, 28, 27, 23, 20, 18, 16, 15, 21, 10, 10, 10, 11, 11, 10, 11, 8, 7, 9, 10, 15, -1, -1, -1, -1, -1, -1, -1, 495, 495, 50, -1, 52, 52, 52, 52, 52, 52, 52, 35, 28, 28, 27, 23, 20, 18, 16, 18, 18, 10, 8, 8, 11, 10, 10, 7, 7, 7, 10, 13, 15, 16, -1, -1, -1, -1, -1, 522, 522, 496, -1, 52, -1, -1, 52, 52, 52, 52, 52, 35, 28, 28, 27, 23, 20, 18, 16, 15, 15, 14, 8, 9, 7, 7, 8, 6, 6, 10, 11, 12, 16, 17, 16, -1, -1, -1, -1, 522, 522, 522, 522, 52, -1, -1, -1, 52, 52, 52, 52, 28, 28, 28, 5, 5, 6, 6, 13, 12, 12, 11, 7, 8, 7, 7, 6, 7, 7, 10, 10, 15, 15, 16, 15, -1, -1, -1, -1, 522, 522, 522, 522, 52, -1, 52, -1, 52, 52, 52, 6, 6, 6, 6, 6, 5, 6, 6, 6, 10, 11, 8, 6, 5, 5, 5, 7, 10, 13, 16, 17, 16, 13, 13, 14, 18, -1, -1, 522, 522, 522, 522, 522, 42, 52, 52, 52, -1, 6, 6, 6, 6, 6, 6, 6, 5, 5, 6, 6, 6, 9, 5, 5, 5, 5, 5, 7, 8, 7, 17, 15, 11, 12, 13, 13, 18, -1, -1, 522, 522, 522, 522, 41, 42, 43, 44, -1, -1, -1, 6, -1, 6, 6, 6, 6, 6, 5, 5, 6, 6, 5, 5, 5, 5, 6, 7, 8, 7, 7, 12, 9, 10, 11, 13, 17, 17, -1, -1, 522, 522, 522, 40, 41, 42, 43, 44, 46, -1, -1, -1, 6, 6, -1, 6, 6, 5, 5, 4, 4, 4, 4, 3, 5, 5, 7, 7, 20, 17, 17, 8, 8, 10, 10, 14, 15, 16, -1, 522, 522, 37, 38, 40, 41, 42, 43, 44, 46, 47, 8, -1, -1, -1, 5, -1, 6, 5, 4, 3, 3, 3, 3, 7, 5, 9, 9, 9, 20, 17, 13, 9, 9, 10, 11, 13, 14, 15, 16, 35, 36, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 8, 8, -1, -1, -1, 4, 4, 3, 2, 3, 4, 4, 6, 7, 7, 7, 8, 14, 9, 10, 9, 8, 11, 11, 13, 13, 13, 13, 35, 36, 37, 38, 40, 41, 42, 43, 44, -1, 47, 48, -1, 8, 8, -1, 6, -1, 2, 2, 2, 2, 3, 3, 5, 6, 7, 6, 7, 8, 8, 7, 8, 8, 9, 10, 10, 12, 12, 12, 35, 36, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 49, 8, 8, 7, 5, -1, 1, 1, 1, 2, 2, 3, 4, 4, 4, 5, 5, 6, 6, 6, 7, 8, 8, 9, 9, 11, 10, 11, 35, 36, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 49, -1, 9, 7, 6, -1, 1, 1, 1, 2, 2, 2, 5, 5, 6, 5, 7, 6, 7, 7, 12, 9, 10, 9, 10, 10, 11, 11, 35, 36, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 49, -1, 9, 10, 6, -1, 3, 2, 1, 2, 3, 4, 4, 4, 4, 5, 4, 5, 5, 5, 12, 10, 10, 10, 11, 11, 12, 13, 35, 36, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 51, -1, 11, 13, 13, -1, -1, 2, 3, 4, 3, 6, 7, 5, 15, 7, 6, 7, 5, 6, 6, 10, 9, 10, 12, 13, 14, 14, 32, 36, 37, 38, 40, 41, 42, 43, 44, 46, 47, 51, 51, 51, 13, -1, 13, 3, -1, 3, 3, 4, 3, 7, 7, 7, 13, 19, 7, 8, 6, 6, 6, 7, 8, 11, 11, 11, 14, 15, -1, 36, 37, 38, 40, 41, 42, 43, 44, 46, 51, 51, 51, 51, 13, 13, -1, 3, -1, -1, 5, 4, 4, 6, 8, 8, 8, 8, 8, 9, 9, 6, 6, 7, 7, 8, 10, 11, 12, -1, -1, 16, 15, 15, 14, 14, 14, 13, 13, 12, 51, 51, 51, 51, 13, 13, 13, 5, 6, -1, -1, 5, 6, 6, 8, 9, 9, 10, 10, 10, 11, 11, 7, 7, 7, 7, 8, 11, 11, -1, -1, 16, 15, 15, 14, 14, 14, 13, 13, 12, 12, 11, 11, 11, 10, 10, 9, 6, 6, -1, 6, -1, 4, 5, 9, 9, 10, 10, 10, 11, 12, 12, 14, 7, 9, 8, 8, 9, 12, -1, -1, 16, 15, 15, 14, 14, 14, 13, 13, 12, 12, 11, 11, 10, 10, 10, 9, -1, 8, 9, -1, -1, 5, 6, 9, 9, 10, 10, 11, 12, 13, 13, 14, 14, 10, 9, 8, 8, 9, -1, -1, -1, 15, 15, 14, 14, 14, 13, 13, 12, 12, 11, 11, 10, 10, 9, 9, 8, -1, 9, -1, 9, 5, 5, 10, 11, 10, 10, 12, 13, 13, 14, 15, 14, 13, 11, 11, 9, -1, -1, -1, -1, 15, 15, 14, 14, 14, 13, 13, 12, 12, 11, 11, 10, 10, 9, 9, 8, -1, 7, -1, 8, 6, 9, 10, 11, 12, 12, 13, 22, 19, 19, 17, 14, 12, 15, 15, 11, -1, -1, -1, -1, -1, 15, 14, 14, 14, 14, 13, 12, 12, 11, 11, 10, 10, 9, 9, 8, 8, 7, 7, 7, 8, 9, 10, 11, 12, 13, 14, 23, 23, 21, 20, 14, 13, 20, 16, -1, -1, -1, -1, -1, -1, -1, 14, 14, 14, 14, 13, 12, 12, 11, 11, 10, 10, 9, 11, 14, -1, -1, 8, 11, 11, 9, 10, 12, 13, 14, 15, 21, 23, 25, 24, 28, 27, 26, -1, -1, -1, -1, -1, -1, -1, -1, 14, 14, 14, 14, 13, 12, 12, 11, 10, 10, 10, 11, 11, 14, 15, -1, 12, 12, 11, 11, 22, 13, 14, 15, 16, 19, 22, 24, 25, 33, 33, 32, -1, -1, -1, -1, -1, -1, -1, -1, -1, 14, 14, 14, 13, 12, 12, 11, 10, 10, 9, 11, 12, 14, 26, -1, 26, 25, 24, 23, 22, 21, 18, 17, 16, 18, 21, 22, 25, 39, 39, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 14, 14, 14, 12, 12, 11, 10, 10, 11, 11, 12, 28, 28, -1, 26, 25, 24, 23, 21, 20, 19, 18, 17, 18, 19, 22, 46, 45, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 14, 14, 12, 12, 11, 10, 10, 11, 29, 29, 29, -1, -1, 29, 25, 24, 22, 21, 20, 21, 19, 21, 22, 23, 25, 45, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 12, 11, 10, 10, 29, 29, 29, 29, -1, 29, 29, 29, 24, 22, 21, 21, 21, 21, 22, 23, 25, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 11, 10, 29, 29, 29, 29, 29, -1, 29, 29, 29, 24, 21, 21, 21, 21, 21, 22, 23, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 29, 29, 29, 29, -1, -1, 29, 29, 29, 25, 21, 21, 21, 21, 22, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 29, -1, -1, 29, 29, 29, 29, 21, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]}, "estacoes": [], "sem_transporte": true, "estacoes_geo": [], "rede": {"onibus": false, "linhas": 0}, "areas": [{"nome": "San José Olero", "ref": null, "slug": "san-jose-olero", "pnome": "San-José-Olero", "cep": ""}, {"nome": "San Antonio", "ref": null, "slug": "san-antonio", "pnome": "San-Antonio", "cep": ""}, {"nome": "Itacurubí", "ref": null, "slug": "itacurubi", "pnome": "Itacurubí", "cep": ""}, {"nome": "Villa Armando", "ref": null, "slug": "villa-armando", "pnome": "Villa-Armando", "cep": ""}, {"nome": "Inmaculada", "ref": null, "slug": "inmaculada", "pnome": "Inmaculada", "cep": ""}, {"nome": "Santo Domingo de Guzmán", "ref": null, "slug": "santo-domingo-de-guzman", "pnome": "Santo-Domingo-de-Guzmán", "cep": ""}, {"nome": "Obrero", "ref": null, "slug": "obrero", "pnome": "Obrero", "cep": ""}, {"nome": "San Luís", "ref": null, "slug": "san-luis", "pnome": "San-Luís", "cep": ""}, {"nome": "Fátima", "ref": null, "slug": "fatima", "pnome": "Fátima", "cep": ""}, {"nome": "Conavi", "ref": null, "slug": "conavi", "pnome": "Conavi", "cep": ""}, {"nome": "Jardín de Europa", "ref": null, "slug": "jardin-de-europa", "pnome": "Jardín-de-Europa", "cep": ""}, {"nome": "Villa Alta", "ref": null, "slug": "villa-alta", "pnome": "Villa-Alta", "cep": ""}], "aluguel": {}, "portais": [], "caminhada_min_km": 16.250000000000004, "carro": {"osrm": true}}, "fundo": {"limites": [-23.49892, -57.54078, -23.31813, -57.3451], "gz": "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"}, "clima": [{"mes": 1, "max": 34.6, "min": 23.3, "chuva": 158.9, "sol": 7.2, "luz": 13.33}, {"mes": 2, "max": 33.7, "min": 22.8, "chuva": 152.9, "sol": 7.6, "luz": 12.73}, {"mes": 3, "max": 33.0, "min": 21.7, "chuva": 129.6, "sol": 7.0, "luz": 12.1}, {"mes": 4, "max": 30.7, "min": 19.2, "chuva": 142.2, "sol": 6.1, "luz": 11.42}, {"mes": 5, "max": 26.6, "min": 15.7, "chuva": 113.7, "sol": 5.9, "luz": 10.91}, {"mes": 6, "max": 25.6, "min": 14.7, "chuva": 68.6, "sol": 5.1, "luz": 10.69}, {"mes": 7, "max": 25.6, "min": 13.2, "chuva": 37.7, "sol": 5.9, "luz": 10.9}, {"mes": 8, "max": 28.5, "min": 14.5, "chuva": 28.9, "sol": 5.0, "luz": 11.42}, {"mes": 9, "max": 30.5, "min": 17.0, "chuva": 76.3, "sol": 5.8, "luz": 12.09}, {"mes": 10, "max": 32.1, "min": 20.3, "chuva": 138.2, "sol": 6.7, "luz": 12.76}, {"mes": 11, "max": 32.4, "min": 20.7, "chuva": 200.0, "sol": 7.4, "luz": 13.34}, {"mes": 12, "max": 33.7, "min": 22.6, "chuva": 163.0, "sol": 7.2, "luz": 13.58}], "custo": [{"medida": "indice", "razao": 0.825}, {"medida": "supermercado", "razao": 0.981}, {"medida": "restaurante", "razao": 0.967}], "alimentos": null, "comunidade": [{"ano": 2018, "valor": 6170}, {"ano": 2020, "valor": 7000}, {"ano": 2021, "valor": 7350}, {"ano": 2022, "valor": 8000}, {"ano": 2023, "valor": 8200}]}</script>
+<script>
+(function () {
+  var d = JSON.parse(document.getElementById('dados').textContent);
+  var NIVEL = { pais: 'vale para todo o país', cidade: 'vale para a cidade', posto: 'específico do posto' };
+  var CONF = { alta: 3, media: 2, baixa: 1, sem: 0 };
+  var CONF_TXT = { alta: 'confiança alta', media: 'confiança média', baixa: 'confiança baixa', sem: 'sem informação' };
+
+  function el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function selo(c) {
+    var s = el('span', 'conf c-' + c);
+    s.title = CONF_TXT[c];
+    for (var i = 0; i < 3; i++) s.appendChild(el('i', i < CONF[c] ? 'on' : ''));
+    return s;
+  }
+  // diferença atual calculada no navegador, para que "atualmente" seja sempre verdade
+  function minutosDoFuso(tz, quando) {
+    var p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit',
+      day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(quando);
+    var v = {}; p.forEach(function (x) { v[x.type] = +x.value; });
+    return (Date.UTC(v.year, v.month - 1, v.day, v.hour, v.minute) - quando.getTime()) / 60000;
+  }
+  function horasTexto(min) {
+    var s = min > 0 ? '+' : (min < 0 ? '−' : ''), a = Math.abs(Math.round(min)), h = Math.floor(a / 60), m = a % 60;
+    return (min === 0 ? '0' : s + h) + ' h' + (m ? m : '');
+  }
+  function diferencaAtual() {
+    try {
+      var agora = new Date();
+      agora.setSeconds(0, 0);
+      var atual = minutosDoFuso(d.fuso_iana, agora) - minutosDoFuso('America/Sao_Paulo', agora);
+      var txt = horasTexto(atual);
+      if (d.fuso_base_min !== null && atual !== d.fuso_base_min)
+        txt += ' — atualmente em horário de verão (normal é ' + horasTexto(d.fuso_base_min) + ')';
+      return txt;
+    } catch (e) { return null; }
+  }
+
+  function item(it, tema) {
+    var soData = it.variavel === 'diferenca_brasilia';
+    if (it.vazio && it.fontes.length) {
+      // sem dado para este posto, mas a fonte usada para a variável existe: mostra onde se procurou
+      var dv = el('details', 'vazio-com-fonte');
+      var sv = el('summary');
+      var rv = el('span', 'rotulo'); rv.appendChild(el('span', null, it.rotulo)); sv.appendChild(rv);
+      sv.appendChild(el('span', 'valor vazio-valor', it.valor));
+      dv.appendChild(sv);
+      var bv = el('div', 'detalhe');
+      bv.appendChild(el('p', 'nota', 'Fonte consultada, sem dado para este posto:'));
+      var ulv = el('ul');
+      it.fontes.forEach(function (f) { var li = el('li'); var a = el('a', null, f.titulo); a.href = f.url; a.target = '_blank'; a.rel = 'noopener'; li.appendChild(a); ulv.appendChild(li); });
+      bv.appendChild(ulv);
+      dv.appendChild(bv);
+      return dv;
+    }
+    if (it.vazio) {
+      var vz = el('div', 'item-vazio');
+      vz.appendChild(el('span', 'rotulo', it.rotulo));
+      vz.appendChild(el('span', 'valor', it.valor));
+      return vz;
+    }
+    var det = el('details', it.variavel === 'descricao' ? 'resumo' : null);
+    var sum = el('summary');
+    var rot = el('span', 'rotulo');
+    // parágrafo de abertura da aba: sem rótulo ("Em resumo"), direto no texto
+    rot.appendChild(el('span', null, it.variavel === 'descricao' ? '' : it.rotulo));
+    if (!it.link) rot.appendChild(selo(it.confianca));   // link (ex.: Numbeo) não é dado: sem selo nem data
+    sum.appendChild(rot);
+    var val = el('span', 'valor');
+    var texto = it.valor + (it.unidade ? ' ' + it.unidade : '');
+    if (it.variavel === 'diferenca_brasilia' && d.fuso_iana) texto = diferencaAtual() || texto;
+    // linha em branco (\n\n) separa parágrafos; "; " quebra a linha dentro do parágrafo
+    if (it.link) {
+      var al = el('a', null, texto);
+      al.href = it.link; al.target = '_blank'; al.rel = 'noopener';
+      al.addEventListener('click', function (e) { e.stopPropagation(); });
+      val.appendChild(al); texto = '';
+    }
+    if (texto) texto.split('\n\n').forEach(function (par, j) {
+      var alvo = val;
+      if (j) { alvo = el('span', 'par'); val.appendChild(alvo); }
+      par.split('; ').forEach(function (parte, i) {
+        if (i) alvo.appendChild(document.createElement('br'));
+        alvo.appendChild(document.createTextNode(parte));
+      });
+    });
+    sum.appendChild(val);
+    if (/^CONFLITO/i.test(it.nota)) sum.appendChild(el('span', 'conflito', '⚠ fontes divergem'));
+    det.appendChild(sum);
+
+    var box = el('div', 'detalhe');
+    if (it.nota && !soData) box.appendChild(el('p', 'nota', it.nota));
+    if (soData) {
+      // só a data de atualização
+    } else if (it.fontes.length) {
+      var ul = el('ul');
+      it.fontes.forEach(function (f) {
+        var li = el('li');
+        var a = el('a', null, f.titulo);
+        a.href = f.url; a.target = '_blank'; a.rel = 'noopener';
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+    } else {
+      box.appendChild(el('p', null, 'Sem fonte registrada.'));
+    }
+    // data do dado na fonte (coluna data_coleta): AAAA → "dados de 2023"; AAAA-MM → "dados de jul/2026";
+    // AAAA-MM-DD → "atualizado em 24/11/2026". Sem data (links, parágrafos de resumo), nada aparece.
+    var quando = dataDoDado(it.data);
+    if (quando && it.variavel !== 'descricao') box.appendChild(el('p', null, quando));
+    det.appendChild(box);
+    return det;
+  }
+
+  function dataDoDado(d) {
+    var MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    if (!d) return '';
+    if (/^\d{4}$/.test(d)) return 'dados de ' + d;
+    if (/^\d{4}-\d{2}$/.test(d)) return 'dados de ' + MES[+d.slice(5) - 1] + '/' + d.slice(0, 4);
+    return 'atualizado em ' + d.split('-').reverse().join('/');
+  }
+
+  // ---- fundo vetorial do mapa (OpenStreetMap via Protomaps; ver scripts/fundo_mapa.py) ----
+  function decPolyline(s) {
+    var i = 0, lat = 0, lng = 0, out = [];
+    while (i < s.length) {
+      var b, sh = 0, r = 0;
+      do { b = s.charCodeAt(i++) - 63; r |= (b & 31) << sh; sh += 5; } while (b >= 32);
+      lat += (r & 1) ? ~(r >> 1) : (r >> 1);
+      sh = 0; r = 0;
+      do { b = s.charCodeAt(i++) - 63; r |= (b & 31) << sh; sh += 5; } while (b >= 32);
+      lng += (r & 1) ? ~(r >> 1) : (r >> 1);
+      out.push([lat / 1e5, lng / 1e5]);
+    }
+    return out;
+  }
+  // fundo compactado (gzip + base64, ver gerar_ficha.py): descompactado pelo próprio navegador
+  function abrirFundo(F, pronto) {
+    if (!F.gz) { pronto(F); return; }
+    if (F.aberto) { pronto(F.aberto); return; }
+    if (typeof DecompressionStream === 'undefined') return;   // navegador antigo: mapa sem fundo
+    var bin = atob(F.gz), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text().then(function (t) {
+      var x = JSON.parse(t);
+      x.limites = F.limites;
+      F.aberto = x;
+      pronto(x);
+    });
+  }
+
+  function fundoVetorial(mapaL, F) {
+    var escuro = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+    var C = escuro
+      ? { mar: '#1c2b36', terra: '#212327', verde: '#23352a', areia: '#3a3628', aero: '#2b2b31', expressa: '#9a7a3e', principal: '#4b4e56', rua: '#35383e', balsa: '#4a6b80' }
+      : { mar: '#aad3df', terra: '#f3f0ea', verde: '#d3e7c3', areia: '#f4e8c4', aero: '#e7e4ec', expressa: '#f6c56a', principal: '#ffffff', rua: '#ffffff', balsa: '#6a9fbf' };
+    mapaL.getContainer().style.background = C.mar;
+    // painel próprio abaixo das linhas e marcadores: o fundo pode chegar depois (descompactação assíncrona)
+    if (!mapaL.getPane('fundo')) mapaL.createPane('fundo').style.zIndex = 250;
+    var tinta = L.canvas({ padding: 0.4, pane: 'fundo' }), g = F.grupos;
+    function area(lista, cor) {
+      if (!lista) return;
+      L.polygon(lista.map(function (p) { return p.map(decPolyline); }),
+        { renderer: tinta, stroke: false, fillColor: cor, fillOpacity: 1, interactive: false }).addTo(mapaL);
+    }
+    area(g.terra, C.terra); area(g.aeroporto, C.aero); area(g.verde, C.verde); area(g.areia, C.areia); area(g.agua, C.mar);
+    // espessura (px) por nível de zoom, de 11 a 17
+    var LARG = { rio: [1, 1, 2, 2, 3, 3, 4], rua: [0, 0, 0, 1.5, 2.5, 4, 7], principal: [1, 1.5, 2.5, 3.5, 5, 7, 10],
+                 expressa: [2, 2.5, 3.5, 4.5, 6, 8, 11], balsa: [1, 1, 1.5, 1.5, 2, 2, 2] };
+    var linhas = [['rio', g.rio, C.mar], ['balsa', g.balsa, C.balsa], ['rua', g.rua, C.rua],
+                  ['principal', g.via_principal, C.principal], ['expressa', g.via_expressa, C.expressa]]
+      .filter(function (l) { return l[1]; })
+      .map(function (l) {
+        return { tipo: l[0], camada: L.polyline(l[1].map(decPolyline), { renderer: tinta, color: l[2], weight: 1, opacity: 1,
+          interactive: false, dashArray: l[0] === 'balsa' ? '4 4' : null }) };
+      });
+    // o nome da própria cidade não ajuda e cobre nomes de estação no centro
+    var rotulos = F.rotulos.filter(function (r) { return r[0] !== d.cidade; }).map(function (r) {
+      return { z: r[3], m: L.marker([r[1], r[2]], { interactive: false, keyboard: false,
+        icon: L.divIcon({ className: 'rotulo-mapa' + (r[4] ? ' cidade' : ''), html: r[0], iconSize: null }) }) };
+    });
+    function ajustar() {
+      var z = Math.max(11, Math.min(17, Math.round(mapaL.getZoom()))), i = z - 11;
+      linhas.forEach(function (l) {
+        var w = LARG[l.tipo][i];
+        if (!w) { mapaL.removeLayer(l.camada); return; }
+        l.camada.setStyle({ weight: w });
+        if (!mapaL.hasLayer(l.camada)) l.camada.addTo(mapaL);
+      });
+      rotulos.forEach(function (r) { if (z >= r.z + 1) r.m.addTo(mapaL); else mapaL.removeLayer(r.m); });
+    }
+    mapaL.on('zoomend', ajustar);
+    ajustar();
+  }
+
+  // mostrador analógico; à noite (18h–6h) o fundo fica escuro, porque 12 h no mostrador não distinguem dia e noite
+  function mostrador() {
+    var ns = 'http://www.w3.org/2000/svg';
+    function n(tag, at) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); return e; }
+    var svg = n('svg', { viewBox: '0 0 100 100', width: '42', height: '42', 'class': 'analogico', 'aria-hidden': 'true' });
+    var face = n('circle', { cx: 50, cy: 50, r: 46, 'class': 'face' });
+    svg.appendChild(face);
+    for (var i = 0; i < 12; i++) {
+      var a = i * Math.PI / 6, r1 = i % 3 ? 38 : 34;
+      svg.appendChild(n('line', { x1: 50 + r1 * Math.sin(a), y1: 50 - r1 * Math.cos(a), x2: 50 + 42 * Math.sin(a), y2: 50 - 42 * Math.cos(a),
+        'class': 'marca', 'stroke-width': i % 3 ? 2 : 3.5 }));
+    }
+    var ph = n('line', { x1: 50, y1: 50, x2: 50, y2: 26, 'class': 'ponteiro', 'stroke-width': 5 });
+    var pm = n('line', { x1: 50, y1: 50, x2: 50, y2: 14, 'class': 'ponteiro', 'stroke-width': 3 });
+    svg.appendChild(ph); svg.appendChild(pm);
+    svg.appendChild(n('circle', { cx: 50, cy: 50, r: 4, 'class': 'eixo' }));
+    return { svg: svg, mostrar: function (h, m) {
+      ph.setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m / 2) + ' 50 50)');
+      pm.setAttribute('transform', 'rotate(' + (m * 6) + ' 50 50)');
+      svg.setAttribute('class', 'analogico' + (h >= 18 || h < 6 ? ' noite' : ''));
+    } };
+  }
+
+  function relogios() {
+    var box = el('div', 'relogios');
+    // na SERE (Brasília), um relógio só
+    var locais = d.fuso_iana === 'America/Sao_Paulo' ? [['Brasília', 'America/Sao_Paulo']]
+      : [['Brasília', 'America/Sao_Paulo'], [d.cidade, d.fuso_iana]];
+    var celulas = locais.map(function (l) {
+      var c = el('div', 'relogio');
+      var an = mostrador();
+      var onde = el('div', 'onde', l[0]), gmt = el('span', 'gmt');
+      onde.appendChild(gmt); c.appendChild(onde);
+      c.appendChild(an.svg);
+      var h = el('div', 'hora');
+      c.appendChild(h);
+      var cal = el('div', 'folhinha'), aros = el('div', 'aros'), folha = el('div', 'folha');
+      aros.appendChild(el('i')); aros.appendChild(el('i'));
+      var sem = el('div', 'topo'), num = el('div', 'num'), mes = el('div', 'mes');
+      folha.appendChild(num); folha.appendChild(mes);
+      cal.appendChild(aros); cal.appendChild(sem); cal.appendChild(folha);
+      c.appendChild(cal); box.appendChild(c);
+      var dia = { sem: sem, num: num, mes: mes, cal: cal, gmt: gmt };
+      return { tz: l[1], hora: h, dia: dia, an: an };
+    });
+    function atualizar() {
+      var agora = new Date();
+      celulas.forEach(function (c) {
+        try {
+          c.hora.textContent = agora.toLocaleTimeString('pt-BR', { timeZone: c.tz, hour: '2-digit', minute: '2-digit' });
+          var f = {};
+          new Intl.DateTimeFormat('pt-BR', { timeZone: c.tz, weekday: 'short', day: 'numeric', month: 'short' })
+            .formatToParts(agora).forEach(function (x) { f[x.type] = x.value.replace('.', ''); });
+          var o = Math.round(minutosDoFuso(c.tz, agora) / 15) * 15, oa = Math.abs(o);
+          c.dia.gmt.textContent = '(GMT ' + (o < 0 ? '−' : '+') + Math.floor(oa / 60) + (oa % 60 ? ':' + ('0' + oa % 60).slice(-2) : '') + ')';
+          c.dia.sem.textContent = f.weekday; c.dia.num.textContent = f.day; c.dia.mes.textContent = f.month;
+          c.dia.cal.title = agora.toLocaleDateString('pt-BR', { timeZone: c.tz, weekday: 'long', day: 'numeric', month: 'long' });
+          var p = c.hora.textContent.split(':');
+          c.an.mostrar(+p[0], +p[1]);
+        } catch (e) { c.hora.textContent = '—'; }
+      });
+    }
+    atualizar();
+    setInterval(atualizar, 15000);
+    return box;
+  }
+
+  // Custo de vida: uma barra por medida, em múltiplos do Brasil (linha vertical = Brasil)
+  var NOMES_CUSTO = { indice: 'Preços em geral', supermercado: 'Supermercado', restaurante: 'Restaurantes e hotéis',
+                      big_mac: 'Big Mac' };
+  function graficoCusto(c) {
+    var box = el('div', 'grafico');
+    var W = 340, lin = 30, pe = 132, pd = 34, pt = 8, H = pt + c.length * lin + 18;
+    var topo = Math.max(2, Math.ceil(Math.max.apply(null, c.map(function (p) { return p.razao; }))));
+    var x = function (v) { return pe + v * (W - pe - pd) / topo; };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Custo de vida em relação ao Brasil');
+    function no(tag, at, txt) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+    c.forEach(function (p, i) {
+      var y = pt + i * lin;
+      no('text', { x: pe - 8, y: y + 17, 'text-anchor': 'end', 'font-size': 12, fill: 'currentColor', 'fill-opacity': 0.8 }, NOMES_CUSTO[p.medida] || p.medida);
+      no('rect', { x: pe, y: y + 6, width: Math.max(1, x(p.razao) - pe), height: 15, rx: 2, fill: 'currentColor', 'fill-opacity': 0.55 });
+      no('text', { x: x(p.razao) + 4, y: y + 17, 'font-size': 12, fill: 'currentColor' }, p.razao.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '×');
+    });
+    var yb = pt + c.length * lin;
+    no('line', { x1: x(1), x2: x(1), y1: pt, y2: yb, stroke: 'currentColor', 'stroke-width': 1.5, 'stroke-dasharray': '3 3' });
+    no('text', { x: x(1), y: yb + 13, 'text-anchor': 'middle', 'font-size': 11, fill: 'currentColor', 'fill-opacity': 0.7 }, 'Brasil = 1');
+    box.appendChild(el('div', 'grafico-titulo', 'Em relação ao Brasil'));
+    box.appendChild(svg);
+    return box;
+  }
+
+  // Preços de alimentos: par de barras por produto (cidade do posto × Brasília), em USD por kg ou litro
+  function graficoAlimentos(dados, cidade) {
+    var lista = dados.produtos;
+    var box = el('div', 'grafico');
+    var W = 340, lin = 46, pe = 8, pd = 44, pt = 22, H = pt + lista.length * lin + 4;
+    var topo = Math.max.apply(null, lista.map(function (p) { return Math.max(p.usd, p.brasilia); }));
+    var x = function (v) { return pe + v * (W - pe - pd) / topo; };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Preços de alimentos em ' + cidade + ' e em Brasília, em USD');
+    function no(tag, at, txt) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+    var fmt = function (v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    // legenda
+    no('rect', { x: pe, y: 4, width: 10, height: 10, rx: 2, fill: 'currentColor', 'fill-opacity': 0.8 });
+    no('text', { x: pe + 14, y: 13, 'font-size': 11, fill: 'currentColor' }, cidade);
+    var lx = pe + 24 + cidade.length * 6.2;
+    no('rect', { x: lx, y: 4, width: 10, height: 10, rx: 2, fill: 'currentColor', 'fill-opacity': 0.25 });
+    no('text', { x: lx + 14, y: 13, 'font-size': 11, fill: 'currentColor' }, 'Brasília');
+    lista.forEach(function (p, i) {
+      var y = pt + i * lin;
+      no('text', { x: pe, y: y + 11, 'font-size': 12, fill: 'currentColor', 'fill-opacity': 0.8 }, p.produto);
+      no('rect', { x: pe, y: y + 15, width: Math.max(1, x(p.usd) - pe), height: 11, rx: 2, fill: 'currentColor', 'fill-opacity': 0.8 });
+      no('text', { x: x(p.usd) + 4, y: y + 24, 'font-size': 11, fill: 'currentColor' }, fmt(p.usd));
+      no('rect', { x: pe, y: y + 28, width: Math.max(1, x(p.brasilia) - pe), height: 11, rx: 2, fill: 'currentColor', 'fill-opacity': 0.25 });
+      no('text', { x: x(p.brasilia) + 4, y: y + 37, 'font-size': 11, fill: 'currentColor', 'fill-opacity': 0.75 }, fmt(p.brasilia));
+    });
+    box.appendChild(el('div', 'grafico-titulo', 'Alimentos: ' + cidade + ' e Brasília (USD por kg ou litro)'));
+    box.appendChild(svg);
+    box.appendChild(el('div', 'grafico-nota', dados.legenda));
+    return box;
+  }
+
+  // Presença brasileira: estimativa do MRE por ano-base (colunas; ano sem relatório fica vazio)
+  function graficoComunidade(serie) {
+    var box = el('div', 'grafico');
+    var ns = 'http://www.w3.org/2000/svg';
+    var a0 = serie[0].ano, a1 = serie[serie.length - 1].ano, n = a1 - a0 + 1;
+    var porAno = {}; serie.forEach(function (p) { porAno[p.ano] = p.valor; });
+    var W = 340, H = 150, pt = 20, pb = 22, larg = (W - 8) / n;
+    var topo = Math.max.apply(null, serie.map(function (p) { return p.valor; }));
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Estimativa da comunidade brasileira por ano-base');
+    function no(tag, at, txt) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+    var fmt = function (v) { return v >= 10000 ? Math.round(v / 1000) + ' mil' : v.toLocaleString('pt-BR'); };
+    for (var i = 0; i < n; i++) {
+      var ano = a0 + i, v = porAno[ano], cx = 4 + larg * i + larg / 2, bw = Math.min(34, larg * 0.6);
+      no('text', { x: cx, y: H - 6, 'font-size': 11, 'text-anchor': 'middle', fill: 'currentColor', 'fill-opacity': 0.75 }, String(ano));
+      if (v == null) {
+        no('text', { x: cx, y: H - pb - 4, 'font-size': 10, 'text-anchor': 'middle', fill: 'currentColor', 'fill-opacity': 0.5 }, 'sem relatório');
+        continue;
+      }
+      var h = Math.max(1, v * (H - pt - pb) / topo);
+      no('rect', { x: cx - bw / 2, y: H - pb - h, width: bw, height: h, rx: 2, fill: 'currentColor', 'fill-opacity': 0.55 });
+      no('text', { x: cx, y: H - pb - h - 4, 'font-size': 11, 'text-anchor': 'middle', fill: 'currentColor' }, fmt(v));
+    }
+    box.appendChild(el('div', 'grafico-titulo', 'Comunidade na jurisdição, por ano-base (estimativa do MRE)'));
+    box.appendChild(svg);
+    return box;
+  }
+
+  // alternância USD/BRL da aba Câmbio: só esconde/mostra itens e gráficos já desenhados
+  function seletorReferencia(sec) {
+    var box = el('div', 'referencia');
+    box.appendChild(el('span', null, 'Moeda de referência'));
+    var opcoes = el('div', 'opcoes');
+    ['usd', 'brl'].forEach(function (r) {
+      var b = el('button', null, r.toUpperCase());
+      b.type = 'button';
+      b.setAttribute('aria-pressed', r === 'usd' ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        sec.setAttribute('data-ref', r);
+        opcoes.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+      opcoes.appendChild(b);
+    });
+    box.appendChild(opcoes);
+    return box;
+  }
+
+  var MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  function graficoCambio(c, brl) {
+    var serie = brl ? c.serie_brl : c.serie;
+    var box = el('div', 'grafico ' + (c.serie_brl ? (brl ? 'ref-brl' : 'ref-usd') : ''));
+    var W = 340, H = 142, pe = 8, pd = 8, pt = 22, pb = 38;
+    var vs = serie.map(function (p) { return p.valor; });
+    var min = Math.min.apply(null, vs), max = Math.max.apply(null, vs);
+    var folga = (max - min) * 0.15 || max * 0.01; min -= folga; max += folga;
+    // faixa mínima de ±2% da média: oscilação ínfima (cotação estável) não vira um 'V' na escala automática
+    var meio = (max + min) / 2;
+    if (max - min < meio * 0.04) { min = meio * 0.98; max = meio * 1.02; }
+    var x = function (i) { return pe + i * (W - pe - pd) / (vs.length - 1); };
+    var y = function (v) { return pt + (max - v) * (H - pt - pb) / (max - min); };
+    // casas como na cotação (fatos_cambio.py): 0 a partir de 100, 3 abaixo de 1, senão 2
+    var fmt = function (v) { var k = v >= 100 ? 0 : v < 1 ? 3 : 2; return v.toLocaleString('pt-BR', { minimumFractionDigits: k, maximumFractionDigits: k }); };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); var ref = brl ? 'BRL' : 'USD', esc = brl ? c.escala_brl : c.escala_usd;
+    // moeda local primeiro, como na cotação: "AUD 1 em USD"
+    var titulo = c.moeda + ' ' + (esc > 1 ? esc.toLocaleString('pt-BR') : '1') + ' em ' + ref + ' — últimos 12 meses';
+    svg.setAttribute('aria-label', titulo);
+    var pts = vs.map(function (v, i) { return x(i) + ',' + y(v); }).join(' ');
+    var linha = document.createElementNS(ns, 'polyline');
+    linha.setAttribute('points', pts); linha.setAttribute('fill', 'none');
+    linha.setAttribute('stroke', 'currentColor'); linha.setAttribute('stroke-width', '2'); linha.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(linha);
+    function texto(tx, xx, yy, anc) {
+      var t = document.createElementNS(ns, 'text'); t.textContent = tx;
+      t.setAttribute('x', xx); t.setAttribute('y', yy); t.setAttribute('text-anchor', anc || 'start');
+      t.setAttribute('font-size', '11'); t.setAttribute('fill', 'currentColor'); svg.appendChild(t);
+    }
+    var ult = vs.length - 1;
+    var ponto = document.createElementNS(ns, 'circle');
+    ponto.setAttribute('cx', x(ult)); ponto.setAttribute('cy', y(vs[ult])); ponto.setAttribute('r', 3.5); ponto.setAttribute('fill', 'currentColor');
+    svg.appendChild(ponto);
+    // rótulo das pontas acima do ponto, ou abaixo quando a linha sobe a partir dele (não cruza o texto)
+    var acima = function (i, viz) { return y(vs[viz]) >= y(vs[i]) - 4; };
+    texto(fmt(vs[0]), x(0), acima(0, 1) ? y(vs[0]) - 7 : y(vs[0]) + 16, 'start');
+    texto(fmt(vs[ult]), x(ult), acima(ult, ult - 1) ? y(vs[ult]) - 7 : y(vs[ult]) + 16, 'end');
+    var r0 = serie[0].rotulo;
+    texto(MESES[+r0.slice(5, 7) - 1] + '/' + r0.slice(2, 4), x(0), H - 6, 'start');
+    texto(c.ultimo || 'hoje', x(ult), H - 6, 'end');
+    box.appendChild(el('div', 'grafico-titulo', titulo));
+    box.appendChild(svg);
+    return box;
+  }
+
+  function graficoClima(c) {
+    var box = el('div', 'grafico');
+    var W = 340, H = 150, pe = 32, pd = 14, pt = 12, pb = 22;
+    var maxs = c.map(function (p) { return p.max; }), mins = c.map(function (p) { return p.min; });
+    var lo = Math.min(0, Math.floor(Math.min.apply(null, mins) / 5) * 5), hi = Math.max(35, Math.ceil(Math.max.apply(null, maxs) / 5) * 5);
+    var x = function (i) { return pe + i * (W - pe - pd) / 11; };
+    var y = function (v) { return pt + (hi - v) * (H - pt - pb) / (hi - lo); };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Temperatura mínima e máxima média por mês');
+    function no(tag, at) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); svg.appendChild(e); return e; }
+    for (var g = lo; g <= hi; g += 10) {
+      no('line', { x1: pe, x2: W - pd, y1: y(g), y2: y(g), stroke: 'currentColor', 'stroke-opacity': g === 0 ? 0.35 : 0.12 });
+      var tg = no('text', { x: pe - 4, y: y(g) + 4, 'text-anchor': 'end', 'font-size': 10, fill: 'currentColor', 'fill-opacity': 0.6 }); tg.textContent = g + '°';
+    }
+    var area = maxs.map(function (v, i) { return x(i) + ',' + y(v); }).concat(mins.slice().reverse().map(function (v, i) { return x(11 - i) + ',' + y(v); }));
+    no('polygon', { points: area.join(' '), fill: 'var(--destaque)', 'fill-opacity': 0.12 });
+    no('polyline', { points: maxs.map(function (v, i) { return x(i) + ',' + y(v); }).join(' '), fill: 'none', stroke: '#c0502e', 'stroke-width': 2 });
+    no('polyline', { points: mins.map(function (v, i) { return x(i) + ',' + y(v); }).join(' '), fill: 'none', stroke: '#2e6fa8', 'stroke-width': 2 });
+    MESES.forEach(function (m, i) { var t = no('text', { x: x(i), y: H - 6, 'text-anchor': 'middle', 'font-size': 10, fill: 'currentColor', 'fill-opacity': 0.7 }); t.textContent = m[0].toUpperCase(); });
+    box.appendChild(el('div', 'grafico-titulo', 'Temperatura média por mês (°C) — mínima e máxima'));
+    box.appendChild(svg);
+    var temLuz = c.every(function (p) { return p.luz != null; }), temSol = c.every(function (p) { return p.sol != null; });
+    if (temLuz) box.appendChild(painelMensal(c, {
+      titulo: 'Horas por dia — luz do dia' + (temSol ? ' (linha) e sol (barras)' : ''), topo: 24, passo: 6, sufixo: 'h',
+      barras: temSol ? c.map(function (p) { return p.sol; }) : null, corBarra: '#d9a21b',
+      linha: c.map(function (p) { return p.luz; }), corLinha: '#b07d0c', rotulo: 'Duração do dia e horas de sol por mês' }));
+    if (c.every(function (p) { return p.chuva != null; })) {
+      var maxC = Math.max.apply(null, c.map(function (p) { return p.chuva; }));
+      var passoC = maxC > 150 ? 100 : 50;
+      box.appendChild(painelMensal(c, {
+        titulo: c.some(function (p) { return p.neve > 0; }) ? 'Precipitação por mês (chuva e neve, em mm)' : 'Chuva por mês (mm)', topo: Math.max(passoC, Math.ceil(maxC / passoC) * passoC), passo: passoC, sufixo: '',
+        barras: c.map(function (p) { return p.chuva; }), corBarra: '#2e6fa8', rotulo: 'Chuva média por mês' }));
+    }
+    return box;
+  }
+
+  // painel de 12 meses com barras e/ou linha, no mesmo alinhamento horizontal do gráfico de temperatura
+  function painelMensal(c, o) {
+    var W = 340, H = 110, pe = 32, pd = 14, pt = 8, pb = 22;
+    var x = function (i) { return pe + i * (W - pe - pd) / 11; };
+    var y = function (v) { return pt + (o.topo - v) * (H - pt - pb) / o.topo; };
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+    svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', o.rotulo);
+    function no(tag, at) { var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); svg.appendChild(e); return e; }
+    for (var g = 0; g <= o.topo; g += o.passo) {
+      no('line', { x1: pe, x2: W - pd, y1: y(g), y2: y(g), stroke: 'currentColor', 'stroke-opacity': g === 0 ? 0.35 : 0.12 });
+      var tg = no('text', { x: pe - (W - pe - pd) / 11 * 0.3 - 2, y: y(g) + 4, 'text-anchor': 'end', 'font-size': 10, fill: 'currentColor', 'fill-opacity': 0.6 }); tg.textContent = g + o.sufixo;
+    }
+    var larg = (W - pe - pd) / 11 * 0.55;
+    if (o.barras) o.barras.forEach(function (v, i) {
+      no('rect', { x: x(i) - larg / 2, y: y(v), width: larg, height: Math.max(0, y(0) - y(v)), fill: o.corBarra, 'fill-opacity': o.linha ? 0.45 : 0.75, rx: 1.5 });
+    });
+    if (o.linha) no('polyline', { points: o.linha.map(function (v, i) { return x(i) + ',' + y(v); }).join(' '), fill: 'none', stroke: o.corLinha, 'stroke-width': 2 });
+    MESES.forEach(function (m, i) { var t = no('text', { x: x(i), y: H - 6, 'text-anchor': 'middle', 'font-size': 10, fill: 'currentColor', 'fill-opacity': 0.7 }); t.textContent = m[0].toUpperCase(); });
+    var bloco = document.createElement('div');
+    bloco.appendChild(el('div', 'grafico-titulo', o.titulo));
+    bloco.appendChild(svg);
+    return bloco;
+  }
+
+  // ---------- mapa de moradia (toque livre) ----------
+  function fmtN(v) { return Math.round(v).toLocaleString('pt-BR'); }
+  function mapa(m) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var G = m.grade, P = m.proj, VB = m.viewbox;
+    var box = el('div', 'mapa');
+    var tela = el('div', 'mapa-tela');
+    var svg = document.createElementNS(ns, 'svg');
+    var vb = VB.slice();
+    var estrela, marca;
+    function px() { return vb[2] / (svg.clientWidth || 360); }
+    function aplicar() {
+      svg.setAttribute('viewBox', vb.join(' '));
+      if (estrela) estrela.setAttribute('font-size', 24 * px());
+      if (marca) { marca.setAttribute('r', 7 * px()); marca.setAttribute('stroke-width', 3 * px()); }
+    }
+    function novo(tag, at) {
+      var e = document.createElementNS(ns, tag);
+      for (var k in at) e.setAttribute(k, at[k]);
+      return e;
+    }
+    svg.appendChild(novo('path', { d: m.contorno, 'class': 'terra' }));
+    m.linhas.forEach(function (l) {
+      var p = novo('path', { d: l.d, 'class': 'linha', stroke: l.cor });
+      p.style.strokeWidth = l.larg * 1.6 + 'px';
+      svg.appendChild(p);
+    });
+    estrela = novo('text', { x: 0, y: 0, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#1d1f22', stroke: '#fff', 'stroke-width': '1.5', 'class': 'estrela' });
+    estrela.textContent = '★';
+    marca = novo('circle', { cx: 0, cy: 0, r: 7, 'class': 'marca' });
+    marca.style.display = 'none';
+    svg.appendChild(marca);
+    svg.appendChild(estrela);
+
+    var info = el('div', 'mapa-info');
+    var horario = 'normal', ultimo = [0, 0];
+    var seletor = el('div', 'mapa-horario');
+    [['normal', 'Horário normal'], ['pico', 'Horário de pico']].forEach(function (h) {
+      var b = el('button', h[0] === horario ? 'ativo' : null, h[1]);
+      b.onclick = function () {
+        horario = h[0];
+        Array.prototype.forEach.call(seletor.children, function (c) { c.classList.remove('ativo'); });
+        b.classList.add('ativo'); mostrar(ultimo[0], ultimo[1]);
+      };
+      seletor.appendChild(b);
+    });
+
+    function celula(x, y) {
+      var c = Math.floor((x - G.x0) / G.passo), r = Math.floor((y - G.y0) / G.passo);
+      if (c < 0 || r < 0 || c >= G.cols || r >= G.rows) return -1;
+      return r * G.cols + c;
+    }
+    function geo(x, y) { return [P.lon0 + x / 100 / P.kx, P.lat0 - y / 100 / P.ky]; }
+    function linkPortal(url, area, x, y) {
+      var ll = geo(x, y), d = 0.012;
+      var sub = { lat: ll[1].toFixed(5), lon: ll[0].toFixed(5), latmin: (ll[1] - d).toFixed(5), latmax: (ll[1] + d).toFixed(5),
+                  lonmin: (ll[0] - d).toFixed(5), lonmax: (ll[0] + d).toFixed(5),
+                  area_slug: area ? area.slug : '', area_pnome: area ? area.pnome : '', cep: area ? area.cep : '' };
+      return url.replace(/\{(\w+)\}/g, function (_, k) { return sub[k] !== undefined ? sub[k] : ''; });
+    }
+    function linhaInfo(rot, val) {
+      var l = el('div', 'mi-linha'); l.appendChild(el('span', 'mi-rot', rot)); l.appendChild(el('span', 'mi-val', val)); return l;
+    }
+    function mostrar(x, y) {
+      ultimo = [x, y];
+      var k = celula(x, y);
+      info.textContent = '';
+      if (k < 0 || G.t[k] < 0) {
+        esconderMarca();
+        info.appendChild(el('div', 'mi-aviso', 'Ponto fora da área coberta pelo mapa.'));
+        return;
+      }
+      porMarca(x, y);
+      var area = G.a[k] >= 0 ? m.areas[G.a[k]] : null;
+      info.appendChild(el('div', 'nome', area ? area.nome : 'Ponto escolhido'));
+      // deslocamento
+      var t = G.t[k], e = G.e[k], w = G.w[k];
+      var dkm = Math.hypot(x, y) / 100, C = m.carro;
+      if (C.osrm) {
+        // sem índice de trânsito para a cidade: tempo de rota do OpenStreetMap, sem trânsito
+        info.appendChild(linhaInfo('Carro (sem trânsito)', G.c[k] >= 0 ? '≈ ' + Math.max(1, G.c[k]) + ' min' : 'sem informação'));
+      } else {
+        var carro = Math.round(C.fixo + dkm * C.desvio * C[horario] / 10);
+        if (!m.sem_transporte) info.appendChild(linhaInfo('Transporte público', '≈ ' + t + ' min'));
+        info.appendChild(linhaInfo('Carro (' + (horario === 'pico' ? 'pico' : 'horário normal') + ')', '≈ ' + carro + ' min'));
+      }
+      if (m.sem_transporte) {
+        info.appendChild(linhaInfo('Transporte público', 'sem informação'));
+      } else if (e >= 0) {
+        var nomeE = m.estacoes[e], rotE = nomeE === 'ponto de ônibus' ? 'Embarque' : 'Estação';
+        info.appendChild(linhaInfo(rotE, nomeE + (w < 0 ? ' (ônibus, ≈ ' + (-w) + ' min)' : ' (' + w + ' min a pé)')));
+      } else {
+        var cx = G.x0 + (k % G.cols + 0.5) * G.passo, cy = G.y0 + (Math.floor(k / G.cols) + 0.5) * G.passo;
+        var pe = Math.hypot(cx, cy) / 100 * m.caminhada_min_km;
+        info.appendChild(linhaInfo('Estação', Math.abs(pe - t) < 1 ? 'nenhuma — a pé até o posto' : 'nenhuma — ônibus até o posto'));
+      }
+      // aluguel
+      var al = area && area.ref !== null ? m.aluguel[String(area.ref)] : null;
+      if (al) {
+        var ref = m.areas[area.ref].nome !== area.nome ? ' (referência: ' + al.rotulo + ')' : '';
+        info.appendChild(el('div', 'mi-sub', 'Aluguel' + ref));
+        ['1', '2', '3'].forEach(function (q) {
+          var v = al.q[q]; if (!v) return;
+          var local = al.moeda + ' ' + fmtN(v.local) + (al.periodo === 'semana' ? '/semana' : '');
+          info.appendChild(linhaInfo(q + (q === '1' ? ' quarto' : ' quartos'), 'USD ' + fmtN(v.usd) + '/mês' + (al.moeda === 'USD' ? '' : ' · ' + local)));
+        });
+        info.appendChild(el('div', 'mi-fonte', al.fonte));
+      } else {
+        info.appendChild(linhaInfo('Aluguel', 'sem informação'));
+      }
+      // link genérico (sem {marcador} no endereço) não leva à área tocada: o texto não promete isso
+      if (m.portais.length === 1) {
+        var p1 = m.portais[0];
+        var a = el('a', 'mi-link', 'Ver anúncios ' + (p1.url.indexOf('{') >= 0 ? 'nesta área ' : '') + 'no ' + p1.nome + ' →');
+        a.href = linkPortal(p1.url, area, x, y); a.target = '_blank'; a.rel = 'noopener';
+        info.appendChild(a);
+      } else if (m.portais.length > 1) {
+        var lp = el('div', 'mi-link');
+        lp.appendChild(document.createTextNode('Ver anúncios: '));
+        m.portais.forEach(function (p, i) {
+          if (i) lp.appendChild(document.createTextNode(' · '));
+          var ap = el('a', null, p.nome + (p.url.indexOf('{') >= 0 ? ' (nesta área)' : ''));
+          ap.href = linkPortal(p.url, area, x, y); ap.target = '_blank'; ap.rel = 'noopener';
+          lp.appendChild(ap);
+        });
+        info.appendChild(lp);
+      }
+    }
+
+    function pontoSvg(e) {
+      var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
+    function zoom(f) {
+      var cx = vb[0] + vb[2] / 2, cy = vb[1] + vb[3] / 2;
+      var w = Math.min(VB[2] * 1.2, Math.max(VB[2] / 40, vb[2] / f)), h = w * vb[3] / vb[2];
+      vb = [cx - w / 2, cy - h / 2, w, h]; aplicar();
+    }
+    var ini = null, arrastou = false;
+    svg.addEventListener('pointerdown', function (e) { ini = [e.clientX, e.clientY, vb[0], vb[1]]; arrastou = false; });
+    svg.addEventListener('pointermove', function (e) {
+      if (!ini) return;
+      var r = svg.getBoundingClientRect(), k = vb[2] / r.width;
+      if (Math.abs(e.clientX - ini[0]) + Math.abs(e.clientY - ini[1]) > 6) arrastou = true;
+      if (!arrastou) return;
+      vb[0] = ini[2] - (e.clientX - ini[0]) * k; vb[1] = ini[3] - (e.clientY - ini[1]) * k; aplicar();
+    });
+    svg.addEventListener('pointerup', function (e) {
+      if (ini && !arrastou) { var p = pontoSvg(e); mostrar(p.x, p.y); }
+      ini = null;
+    });
+    window.addEventListener('pointerup', function () { ini = null; });
+
+    function esconderMarca() { marca.style.display = 'none'; }
+    function porMarca(x, y) { marca.setAttribute('cx', x); marca.setAttribute('cy', y); marca.style.display = ''; }
+
+    if (window.L) {
+      // mapa de ruas (CARTO/OpenStreetMap); a lógica de toque é a mesma
+      var div = el('div', 'leaflet');
+      box.appendChild(div);
+      box.appendChild(el('div', 'mapa-dica', 'Toque em qualquer ponto do mapa. ★ = posto.'));
+      if (!m.carro.osrm) box.appendChild(seletor);
+      box.appendChild(info);
+      setTimeout(function () {
+        var mapaL = L.map(div, { zoomControl: true, minZoom: 11, maxZoom: 17 }).setView([P.lat0, P.lon0], 13);
+        div.mapaL = mapaL;   // referência para testes automáticos
+        if (d.fundo) {
+          // fundo desenhado aqui mesmo, sem imagens de fora (o SharePoint bloqueia)
+          var lim = d.fundo.limites;
+          mapaL.setMaxBounds([[lim[0], lim[1]], [lim[2], lim[3]]]).options.maxBoundsViscosity = 1;
+          abrirFundo(d.fundo, function (F) { fundoVetorial(mapaL, F); });
+          mapaL.attributionControl.setPrefix(false).addAttribution('&copy; OpenStreetMap');
+        }
+        m.linhas.forEach(function (l) {
+          if (l.larg < 0.9) return;
+          L.polyline(l.geo, { color: l.cor, weight: l.larg * 1.8, opacity: 0.7, interactive: false }).addTo(mapaL);
+        });
+        if (m.estacoes_geo && m.estacoes_geo.length) {
+          // estações: bolinha a partir do zoom 13, nome a partir do 15
+          var tintaE = L.canvas({ padding: 0.4 });
+          var estB = m.estacoes_geo.map(function (s) {
+            return L.circleMarker([s[1], s[2]], { renderer: tintaE, radius: 3, color: '#1d1f22', weight: 1.5,
+              fillColor: '#ffffff', fillOpacity: 1, interactive: false });
+          });
+          var estN = m.estacoes_geo.map(function (s) {
+            return L.marker([s[1], s[2]], { interactive: false, keyboard: false,
+              icon: L.divIcon({ className: 'rotulo-estacao', html: s[0], iconSize: null }) });
+          });
+          var ajustarEst = function () {
+            var z = mapaL.getZoom();
+            // paradas só de bonde/VLT (s[3] = 1) entram dois níveis de zoom depois
+            estB.forEach(function (b, i) {
+              var menor = m.estacoes_geo[i][3], zb = menor ? 15 : 13;
+              if (z >= zb) { b.setRadius(z >= 15 && !menor ? 5 : 3); if (!mapaL.hasLayer(b)) b.addTo(mapaL); } else mapaL.removeLayer(b);
+            });
+            estN.forEach(function (n, i) {
+              if (z >= (m.estacoes_geo[i][3] ? 16 : 15)) { if (!mapaL.hasLayer(n)) n.addTo(mapaL); } else mapaL.removeLayer(n);
+            });
+          };
+          mapaL.on('zoomend', ajustarEst);
+          ajustarEst();
+        }
+        L.marker([P.lat0, P.lon0], { interactive: false, icon: L.divIcon({ className: 'estrela-ll', html: '★', iconSize: [26, 26] }) }).addTo(mapaL);
+        var circ = null;
+        esconderMarca = function () { if (circ) { mapaL.removeLayer(circ); circ = null; } };
+        porMarca = function (x, y) {
+          var ll = geo(x, y);
+          if (!circ) circ = L.circleMarker([ll[1], ll[0]], { radius: 8, color: '#1f5c44', weight: 3, fillColor: '#fff', fillOpacity: 1 }).addTo(mapaL);
+          else circ.setLatLng([ll[1], ll[0]]);
+        };
+        mapaL.on('click', function (e) {
+          mostrar((e.latlng.lng - P.lon0) * P.kx * 100, -(e.latlng.lat - P.lat0) * P.ky * 100);
+        });
+        mostrar(0, 0);
+        var det = div.closest('details');
+        if (det) det.addEventListener('toggle', function () {
+          if (det.open) { mapaL.invalidateSize(); mapaL.setView([P.lat0, P.lon0], 13); }
+        });
+      }, 0);
+      return box;
+    }
+
+    tela.appendChild(svg);
+    var zb = el('div', 'mapa-zoom');
+    var mais = el('button', null, '+'), menos = el('button', null, '−');
+    mais.onclick = function () { zoom(1.6); }; menos.onclick = function () { zoom(1 / 1.6); };
+    zb.appendChild(mais); zb.appendChild(menos); tela.appendChild(zb);
+    box.appendChild(tela);
+    box.appendChild(el('div', 'mapa-dica', 'Toque em qualquer ponto do mapa. ★ = posto.'));
+    box.appendChild(seletor);
+    box.appendChild(info);
+    // começa com ~16 km de largura centrado no posto e com o posto selecionado
+    var larg = Math.min(VB[2], 1600);
+    vb = [-larg / 2, -larg / 2 * 340 / 360, larg, larg * 340 / 360];
+    aplicar();
+    setTimeout(function () { var r = svg.clientHeight / (svg.clientWidth || 360); vb[3] = vb[2] * r; vb[1] = -vb[3] / 2; aplicar(); }, 0);
+    mostrar(0, 0);
+    return box;
+  }
+
+  var app = document.getElementById('app');
+  // o link "← Postos" fica no HTML, não é criado aqui: no SharePoint, links criados por script não abrem
+  app.appendChild(el('div', 'local', d.cidade + ' · ' + d.pais));
+  app.appendChild(el('h1', null, d.posto));
+  app.appendChild(el('p', 'endereco', d.endereco));
+
+  var leg = el('div', 'legenda');
+  ['alta', 'media', 'baixa'].forEach(function (c) {
+    var s = el('span'); s.appendChild(selo(c)); s.appendChild(document.createTextNode(' ' + CONF_TXT[c]));
+    leg.appendChild(s);
+  });
+  app.appendChild(leg);
+
+  var blocoAtual = null, alvo = app;
+  d.temas.forEach(function (t) {
+    if (t.bloco && t.bloco !== blocoAtual) {
+      blocoAtual = t.bloco; alvo = el('details', 'bloco'); alvo.open = false;
+      alvo.appendChild(el('summary', null, t.bloco)); app.appendChild(alvo);
+    }
+    var sec = el('details', 'tema');
+    sec.open = false;
+    sec.appendChild(el('summary', null, t.icone + '  ' + t.rotulo));
+    if (t.tema === 'fuso' && d.fuso_iana) sec.appendChild(relogios());
+    if (t.tema === 'moradia' && d.mapa) sec.appendChild(mapa(d.mapa));
+    // no clima, o resumo em texto vem antes do gráfico
+    var antes = t.tema === 'clima' ? t.itens.filter(function (it) { return it.variavel === 'descricao'; }) : [];
+    antes.forEach(function (it) { sec.appendChild(item(it, t.tema)); });
+    if (t.tema === 'clima' && d.clima && d.clima.length === 12) sec.appendChild(graficoClima(d.clima));
+    if (t.tema === 'custo_vida' && d.custo && d.custo.length) sec.appendChild(graficoCusto(d.custo));
+    if (t.tema === 'custo_vida' && d.alimentos) sec.appendChild(graficoAlimentos(d.alimentos, d.cidade));
+    if (t.tema === 'presenca' && d.comunidade) sec.appendChild(graficoComunidade(d.comunidade));
+    var duasRef = t.tema === 'cambio' && d.cambio && d.cambio.serie_brl;
+    if (duasRef) { sec.setAttribute('data-ref', 'usd'); sec.appendChild(seletorReferencia(sec)); }
+    if (t.tema === 'cambio' && d.cambio && d.cambio.serie.length > 1) {
+      sec.appendChild(graficoCambio(d.cambio, false));
+      if (duasRef) sec.appendChild(graficoCambio(d.cambio, true));
+    }
+    t.itens.forEach(function (it) {
+      if (antes.indexOf(it) >= 0) return;
+      var no = item(it, t.tema);
+      if (duasRef) {
+        if (/_brl$/.test(it.variavel)) no.classList.add('ref-brl');
+        else if (it.variavel === 'cotacao') no.classList.add('ref-usd');
+      }
+      sec.appendChild(no);
+    });
+    alvo.appendChild(sec);
+  });
+
+  app.appendChild(el('footer', null, 'Toque em um item para ver a fonte.'));
+})();
+</script>
+</body>
+</html>
